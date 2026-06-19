@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-<title>赤松水産 養殖管理 v27.2</title>
+<title>赤松水産 養殖管理 v27.3</title>
 <script>/*!
  * Chart.js v4.5.1
  * https://www.chartjs.org
@@ -586,6 +586,12 @@ tbody tr:hover td{background:var(--surface2);}
   }
 }
 
+
+/* v27.3 測量・増肉係数(FCR) */
+.fcr-good{color:var(--ok)!important}.fcr-warn{color:var(--warn)!important}.fcr-bad{color:var(--danger)!important}
+.measure-note{font-size:11px;color:var(--tx-m);line-height:1.6;margin:6px 0 12px}
+.dash-cage-metric.fcr-metric{background:linear-gradient(180deg,rgba(58,181,160,.10),rgba(58,181,160,.03));border-color:rgba(58,181,160,.18)}
+
 </style>
 </head>
 <body>
@@ -736,6 +742,12 @@ tbody tr:hover td{background:var(--surface2);}
         <div class="form-group"><label>死亡尾数</label><input type="number" id="recDead" placeholder="0" min="0" inputmode="numeric"></div>
         <div class="form-group"><label>水温 (℃)</label><input type="number" id="recTemp" placeholder="20.0" step="0.1" inputmode="decimal"></div>
       </div>
+      <div class="section-label">測量（任意）</div>
+      <div class="form-row2 keep-2" style="margin-bottom:8px">
+        <div class="form-group"><label>平均体重 (kg/尾)</label><input type="number" id="recAvgWeight" placeholder="例）1.25" step="0.01" min="0" inputmode="decimal"></div>
+        <div class="form-group"><label>測定尾数（任意）</label><input type="number" id="recMeasureCount" placeholder="例）30" min="0" inputmode="numeric"></div>
+      </div>
+      <div class="measure-note">測量した日に平均体重を入力すると、前回測量からの給餌量・出荷重量・在池重量の変化から増肉係数(FCR)を自動計算します。</div>
       <details class="details-box">
         <summary>詳細入力（投薬・天気・作業・日誌）</summary>
       <div class="form-row2" style="margin-bottom:12px">
@@ -773,7 +785,7 @@ tbody tr:hover td{background:var(--surface2);}
         直近の記録
       </div></div>
       <div class="table-wrap">
-        <table><thead><tr><th>日付</th><th>生簀</th><th>給餌</th><th>死亡</th><th>水温</th><th>天気</th><th>作業</th><th></th></tr></thead>
+        <table><thead><tr><th>日付</th><th>生簀</th><th>給餌</th><th>死亡</th><th>水温</th><th>平均体重</th><th>FCR</th><th>作業</th><th></th></tr></thead>
         <tbody id="recWeekBody"></tbody></table>
       </div>
     </div>
@@ -1518,6 +1530,57 @@ function getAllCost(from,to){
   },{direct:0,feedFifo:0,wastage:0,indirect:0,total:0});
 }
 
+
+// ─── 測量・増肉係数(FCR) ───────────────────────────────────
+function getCageBiomass(cageId,date){
+  const m=getLatestMeasurement(cageId,date);
+  const living=getLiving(cageId,date);
+  if(!m) return null;
+  return {date:m.date, avgWeight:m.avgWeight, living, biomass:living*m.avgWeight, measureCount:m.measureCount||0};
+}
+function getMeasurements(cageId){
+  const cage=getCage(cageId);
+  const list=[];
+  if(cage && cage.avgWeight>0 && cage.count>0){
+    list.push({date:cage.startDate||cage.initialDate||'0000-00-00', avgWeight:Number(cage.avgWeight)||0, living:cage.count||0, biomass:(cage.count||0)*(Number(cage.avgWeight)||0), base:true, measureCount:0});
+  }
+  records.filter(r=>r.cageId===cageId && Number(r.avgWeight)>0).forEach(r=>{
+    const living=getLiving(cageId,r.date);
+    const avg=Number(r.avgWeight)||0;
+    list.push({date:r.date, avgWeight:avg, living, biomass:living*avg, base:false, measureCount:r.measureCount||0});
+  });
+  return list.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function getLatestMeasurement(cageId,toDate){
+  const arr=getMeasurements(cageId).filter(m=>!toDate || m.date<=toDate);
+  return arr[arr.length-1]||null;
+}
+function getFCR(cageId,toDate){
+  const arr=getMeasurements(cageId).filter(m=>!toDate || m.date<=toDate);
+  if(arr.length<2) return null;
+  const cur=arr[arr.length-1], prev=arr[arr.length-2];
+  if(!cur.avgWeight || !prev.avgWeight) return null;
+  const feed=records.filter(r=>r.cageId===cageId && r.date>prev.date && r.date<=cur.date).reduce((s,r)=>s+(Number(r.feed)||0),0);
+  const shipped=ships.filter(s=>s.cageId===cageId && s.date>prev.date && s.date<=cur.date).reduce((a,s)=>a+(Number(s.weight)||0),0);
+  const gain=cur.biomass - prev.biomass + shipped;
+  if(gain<=0 || feed<=0) return {fcr:null, feed, gain, shipped, cur, prev};
+  return {fcr:feed/gain, feed, gain, shipped, cur, prev};
+}
+function fmtFCR(v){ return (v&&v.fcr)?v.fcr.toFixed(2):'—'; }
+function fcrColor(v){
+  const x=v&&v.fcr;
+  if(!x) return 'var(--tx-m)';
+  if(x<=1.8) return 'var(--ok)';
+  if(x<=2.3) return 'var(--warn)';
+  return 'var(--danger)';
+}
+function getAverageFCR(){
+  const vals=activeCages().map(c=>getFCR(c.id)).filter(x=>x&&x.fcr);
+  if(!vals.length) return null;
+  const feed=vals.reduce((s,x)=>s+x.feed,0), gain=vals.reduce((s,x)=>s+x.gain,0);
+  return gain>0?feed/gain:null;
+}
+
 // ─── ダッシュ ─────────────────────────────────────────────
 let dashChartInst=null;
 function renderDash(){
@@ -1530,6 +1593,7 @@ function renderDash(){
   const totalLiving=activeCages().reduce((s,c)=>s+getLiving(c.id),0);
   const temps=todayRecs.filter(r=>r.temp>0);
   const avgTemp=temps.length?(temps.reduce((s,r)=>s+(r.temp||0),0)/temps.length).toFixed(1):null;
+  const avgFcr=getAverageFCR();
 
   $('dashKPI').innerHTML=`
     <div class="kpi k-aqua">
@@ -1550,7 +1614,7 @@ function renderDash(){
     <div class="kpi k-ok">
       <div class="kpi-label">総飼育尾数</div>
       <div class="kpi-val">${fmtNum(totalLiving)}<span style="font-size:14px;font-weight:400;margin-left:3px">尾</span></div>
-      <div class="kpi-sub">${avgTemp?`平均水温 ${avgTemp}℃`:'水温未記録'}</div>
+      <div class="kpi-sub">${avgFcr?`平均FCR ${avgFcr.toFixed(2)}`:(avgTemp?`平均水温 ${avgTemp}℃`:'水温未記録')}</div>
     </div>`;
 
   // 生簀別ステータス（スマホ向けカード表示）
@@ -1566,6 +1630,9 @@ function renderDash(){
       const feedColor=rec?.feed?'var(--tx)':'var(--warn)';
       const deadTxt=rec?.dead>0?rec.dead+'尾':'0尾';
       const deadColor=rec?.dead>0?'var(--danger)':'var(--tx)';
+      const meas=getLatestMeasurement(cage.id);
+      const fcr=getFCR(cage.id);
+      const biomass=meas?Math.round(getLiving(cage.id)*(meas.avgWeight||0)):null;
       return`<div class="dash-cage-card">
         <div class="dash-cage-head">
           <div><div class="dash-cage-name">${cage.name}</div><div class="dash-cage-sp">${sp}</div></div>
@@ -1574,6 +1641,8 @@ function renderDash(){
         <div class="dash-cage-grid">
           <div class="dash-cage-metric"><div class="m-label">現在尾数</div><div class="m-val">${fmtNum(living)}尾</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">生残率 ${rate}%</div></div>
           <div class="dash-cage-metric"><div class="m-label">給餌</div><div class="m-val" style="color:${feedColor}">${feedTxt}</div></div>
+          <div class="dash-cage-metric"><div class="m-label">平均体重</div><div class="m-val">${meas?meas.avgWeight.toFixed(2)+'kg':'—'}</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">${biomass?`在池 ${fmtNum(biomass)}kg`:'測量未登録'}</div></div>
+          <div class="dash-cage-metric fcr-metric"><div class="m-label">増肉係数</div><div class="m-val" style="color:${fcrColor(fcr)}">${fmtFCR(fcr)}</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">${fcr?.gain?`増重量 ${Math.round(fcr.gain)}kg`:''}</div></div>
           <div class="dash-cage-metric"><div class="m-label">死亡</div><div class="m-val" style="color:${deadColor}">${deadTxt}</div></div>
           <div class="dash-cage-metric"><div class="m-label">水温</div><div class="m-val">${rec?.temp?rec.temp+'℃':'—'}</div></div>
         </div>
@@ -1622,13 +1691,13 @@ function renderDashProfitRank(){
   const rows=activeCages().map(c=>{
     const sales=ships.filter(s=>s.cageId===c.id&&s.date.startsWith(thisMonth)).reduce((sum,s)=>sum+s.amount,0);
     const cost=getCageCost(c.id,thisMonth+'-01',thisMonth+'-31').total;
-    return {name:c.name, profit:sales-cost};
+    return {name:c.name, profit:sales-cost, fcr:getFCR(c.id)};
   }).sort((a,b)=>b.profit-a.profit).slice(0,5);
   const max=Math.max(...rows.map(r=>Math.abs(r.profit)),1);
   box.innerHTML=`<div class="card"><div class="card-hd"><div class="card-hd-l">
     <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-7"/></svg>今月の生簀別粗利益ランキング</div>
     <button class="btn btn-ghost btn-sm" onclick="showPage('pl')">損益を見る</button></div>
-    <div class="rank-list">${rows.length?rows.map(r=>`<div class="rank-row"><div class="rank-name">${r.name}</div><div class="rank-bar"><span style="width:${Math.max(4,Math.abs(r.profit)/max*100)}%;background:${r.profit<0?'var(--danger)':'var(--aqua)'}"></span></div><div class="rank-val" style="color:${r.profit<0?'var(--danger)':'var(--tx)'}">¥${fmtNum(r.profit)}</div></div>`).join(''):'<div style="color:var(--tx-m);font-size:13px">データがありません</div>'}</div></div>`;
+    <div class="rank-list">${rows.length?rows.map(r=>`<div class="rank-row"><div class="rank-name">${r.name}</div><div class="rank-bar"><span style="width:${Math.max(4,Math.abs(r.profit)/max*100)}%;background:${r.profit<0?'var(--danger)':'var(--aqua)'}"></span></div><div class="rank-val" style="color:${r.profit<0?'var(--danger)':'var(--tx)'}">¥${fmtNum(r.profit)}<div style="font-size:10px;color:${fcrColor(r.fcr)}">FCR ${fmtFCR(r.fcr)}</div></div></div>`).join(''):'<div style="color:var(--tx-m);font-size:13px">データがありません</div>'}</div></div>`;
 }
 
 function quickRecord(cageId){showPage('record');setTimeout(()=>{$('recCage').value=cageId;loadExistingRecord();},100);}
@@ -1665,6 +1734,7 @@ function copyLastRecord(){
   if(!cageId) $('recCage').value=last.cageId;
   $('recFeed').value=last.feed||''; $('recDead').value=last.dead||''; $('recTemp').value=last.temp||'';
   $('recMed').value=last.med||'0'; $('recWeather').value=last.weather||'';
+  $('recAvgWeight').value=last.avgWeight||''; $('recMeasureCount').value=last.measureCount||'';
   $('recNote').value=last.note||''; $('recWorkNote').value=last.workNote||''; $('recWorkCat').value=last.workCat||'';
   $('recExistAlert').style.display='none';
   toast('前回記録をコピーしました');
@@ -1696,7 +1766,7 @@ function initRecord(){
   $('recDate').value=today();
   const last=getLast(records); if(last?.cageId) sel.value=last.cageId;
   $('recExistAlert').style.display='none';
-  ['recFeed','recDead','recTemp','recNote','recWorkNote'].forEach(id=>$(id).value='');
+  ['recFeed','recDead','recTemp','recAvgWeight','recMeasureCount','recNote','recWorkNote'].forEach(id=>$(id).value='');
   $('recMed').value='0'; $('recWeather').value=''; $('recWorkCat').value='';
   renderRecWeek();
 }
@@ -1707,10 +1777,11 @@ function loadExistingRecord(){
   if(rec){
     $('recFeed').value=rec.feed||''; $('recDead').value=rec.dead||''; $('recTemp').value=rec.temp||'';
     $('recMed').value=rec.med||'0'; $('recWeather').value=rec.weather||'';
+    $('recAvgWeight').value=rec.avgWeight||''; $('recMeasureCount').value=rec.measureCount||'';
     $('recNote').value=rec.note||''; $('recWorkNote').value=rec.workNote||''; $('recWorkCat').value=rec.workCat||'';
     $('recExistAlert').style.display='';
   } else {
-    ['recFeed','recDead','recTemp','recNote','recWorkNote'].forEach(id=>$(id).value='');
+    ['recFeed','recDead','recTemp','recAvgWeight','recMeasureCount','recNote','recWorkNote'].forEach(id=>$(id).value='');
     $('recMed').value='0'; $('recWeather').value=''; $('recWorkCat').value='';
     $('recExistAlert').style.display='none';
   }
@@ -1722,7 +1793,7 @@ function saveRecord(){
   const payload={id:genId(),cageId,date,
     feed:parseFloat($('recFeed').value)||0, dead:parseInt($('recDead').value)||0,
     temp:parseFloat($('recTemp').value)||0, med:parseInt($('recMed').value)||0,
-    weather:$('recWeather').value, note:$('recNote').value,
+    weather:$('recWeather').value, avgWeight:parseFloat($('recAvgWeight').value)||0, measureCount:parseInt($('recMeasureCount').value)||0, note:$('recNote').value,
     workNote:$('recWorkNote').value, workCat:$('recWorkCat').value,
     updatedAt:new Date().toISOString()};
   const idx=records.findIndex(r=>r.cageId===cageId&&r.date===date);
@@ -1741,12 +1812,13 @@ function renderRecWeek(){
     <td>${r.feed||'—'}</td>
     <td>${r.dead>0?`<span style="color:var(--danger)">${r.dead}</span>`:'0'}</td>
     <td>${r.temp||'—'}</td>
-    <td>${r.weather||'—'}</td>
+    <td>${r.avgWeight?Number(r.avgWeight).toFixed(2)+'kg':'—'}</td>
+    <td style="font-weight:700;color:${fcrColor(getFCR(r.cageId,r.date))}">${r.avgWeight?fmtFCR(getFCR(r.cageId,r.date)):'—'}</td>
     <td style="font-size:11px;color:var(--tx-m)">${r.workCat?`[${r.workCat}] `:''} ${r.workNote||''}</td>
     <td><button class="btn-icon del" onclick="deleteRecord('${r.id}')">
 --></td>
   </tr>`).join('')
-  :`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--tx-m)">記録がありません</td></tr>`;
+  :`<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--tx-m)">記録がありません</td></tr>`;
 }
 function deleteRecord(id){
   confirmDlg('記録を削除','この記録を削除しますか？','削除する',()=>{
@@ -2176,7 +2248,7 @@ function renderPLCage(from,to){
   $('plCageBox').innerHTML=cages.length
     ?cages.map(cage=>{
         const sales=ships.filter(s=>s.cageId===cage.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((s,sh)=>s+sh.amount,0);
-        return makePLCard(cage.name,`${cageCurrentSpecies(cage).name||'—'}　投魚: ${cage.startDate||'—'}`,sales,getCageCost(cage.id,from,to));
+        const fcr=getFCR(cage.id,to); return makePLCard(cage.name,`${cageCurrentSpecies(cage).name||'—'}　FCR: ${fmtFCR(fcr)}　投魚: ${cage.startDate||'—'}`,sales,getCageCost(cage.id,from,to));
       }).join('')
     :'<div class="empty-state"><p>生簀が登録されていません</p></div>';
 }
@@ -2193,10 +2265,10 @@ function renderPLMargin(from,to){
     const sales=ships.filter(s=>s.cageId===cage.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((s,sh)=>s+sh.amount,0);
     const cb=getCageCost(cage.id,from,to);
     const profit=sales-cb.total, margin=sales?Math.round(profit/sales*100):null;
-    return{cage,sales,cb,profit,margin};
+    return{cage,sales,cb,profit,margin,fcr:getFCR(cage.id,to)};
   }).sort((a,b)=>(b.margin||0)-(a.margin||0));
   $('plMarginBox').innerHTML=`<div class="table-wrap"><table>
-    <thead><tr><th>生簀</th><th>魚種</th><th>売上</th><th>コスト</th><th>粗利</th><th>粗利率</th></tr></thead>
+    <thead><tr><th>生簀</th><th>魚種</th><th>売上</th><th>コスト</th><th>粗利</th><th>粗利率</th><th>FCR</th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
       <td><strong>${r.cage.name}</strong></td>
       <td>${cageCurrentSpecies(r.cage).name||'—'}</td>
@@ -2204,6 +2276,7 @@ function renderPLMargin(from,to){
       <td>¥${fmtNum(r.cb.total)}</td>
       <td style="color:${r.profit>=0?'var(--ok)':'var(--danger)'};font-weight:600">${r.profit<0?'-':''}¥${fmtNum(Math.abs(r.profit))}</td>
       <td style="font-weight:700;color:${r.margin===null?'var(--tx-m)':r.margin>=20?'var(--ok)':r.margin>=0?'var(--warn)':'var(--danger)'}">${r.margin!==null?r.margin+'%':'—'}</td>
+      <td style="font-weight:700;color:${fcrColor(r.fcr)}">${fmtFCR(r.fcr)}</td>
     </tr>`).join('')}</tbody>
   </table></div>`;
 }
@@ -2335,7 +2408,7 @@ function renderCageMgr(){
       </button>
       <button class="btn btn-ghost btn-xs" onclick="toggleCageActive('${c.id}')">${c.active===false?'有効化':'無効化'}</button>
     </td>
-  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--tx-m)">生簀が登録されていません</td></tr>';
+  </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--tx-m)">生簀が登録されていません</td></tr>';
 }
 function openCageModal(id){
   const c=id?cages.find(x=>x.id===id):null;
