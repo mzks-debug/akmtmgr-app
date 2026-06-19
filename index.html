@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-<title>赤松水産 養殖管理 v25</title>
+<title>赤松水産 養殖管理 v26</title>
 <script>/*!
  * Chart.js v4.5.1
  * https://www.chartjs.org
@@ -1140,7 +1140,7 @@ tbody tr:hover td{background:var(--surface2);}
 
 <script>
 // =========================================================
-// 赤松水産 養殖管理システム v25 - Main JS
+// 赤松水産 養殖管理システム v26 - Main JS
 // =========================================================
 const $  = id => document.getElementById(id);
 const genId   = () => Math.random().toString(36).slice(2,10);
@@ -1182,10 +1182,10 @@ function closeModal(id){ $(id).classList.remove('open'); }
 const KEYS={
   cages:'aq_cages', species:'aq_species', records:'aq_records',
   ships:'aq_ships', costs:'aq_costs',  inventory:'aq_inventory',
-  costItems:'aq_costItems', settings:'aq_settings', oplog:'aq_oplog'
+  costItems:'aq_costItems', settings:'aq_settings', oplog:'aq_oplog', summary:'aq_summary'
 };
 const load = k => { try{ return JSON.parse(localStorage.getItem(k))||null; }catch{ return null; } };
-const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+const save = (k,v) => { localStorage.setItem(k, JSON.stringify(v)); invalidatePerfCaches(); };
 
 // ─── デフォルト ───────────────────────────────────────────
 function defaultSpecies(){
@@ -1235,6 +1235,24 @@ let costItems = load(KEYS.costItems) || defaultCostItems();
 let settings  = load(KEYS.settings)  || defaultSettings();
 let oplog     = load(KEYS.oplog)     || [];
 let curPage='dash', curPLTab='summary', curSetTab='history';
+
+// ─── 高速化キャッシュ・表示制御 ─────────────────────────────
+let fifoCache=null, fifoSig='';
+let allocCache=new Map(), monthCostCache=new Map();
+let costHistoryLimit=50, settingsHistoryLimit=60;
+function invalidatePerfCaches(){ fifoCache=null; fifoSig=''; allocCache.clear(); monthCostCache.clear(); }
+function dataSig(){
+  const recSig=records.reduce((s,r)=>s+Math.round((r.feed||0)*100)+(r.date?Number(r.date.replaceAll('-','')):0),0);
+  const invSig=inventory.reduce((s,i)=>s+Math.round((i.qty||0)*100)+Math.round(i.unitPrice||0),0);
+  const costSig=costs.reduce((s,c)=>s+Math.round(c.amount||0)+(c.date?Number(c.date.replaceAll('-','')):0),0);
+  const shipSig=ships.reduce((s,sh)=>s+Math.round(sh.amount||0)+(sh.date?Number(sh.date.replaceAll('-','')):0),0);
+  return [records.length,recSig,inventory.length,invSig,costs.length,costSig,ships.length,shipSig,settings.allocRule||'feed',activeCages().length].join('|');
+}
+function monthKeyLocal(offset=0){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+offset); return fmtLocalDate(d).slice(0,7); }
+function monthLastDay(month){ const d=new Date(Number(month.slice(0,4)), Number(month.slice(5,7)), 0); return fmtLocalDate(d); }
+function showMoreCostHistory(){ costHistoryLimit+=50; renderCostHistory(); }
+function showMoreSettingsHistory(){ settingsHistoryLimit+=60; renderHistory(); }
+
 
 function addLog(action,detail){
   oplog.unshift({id:genId(),ts:new Date().toISOString(),action,detail});
@@ -1294,6 +1312,8 @@ function getLiving(cageId, upToDate){
 
 // ─── FIFO計算 ─────────────────────────────────────────────
 function calcFifo(){
+  const sig=records.length+'|'+inventory.length+'|'+records.reduce((s,r)=>s+Math.round((r.feed||0)*100)+(r.date?Number(r.date.replaceAll('-','')):0),0)+'|'+inventory.reduce((s,i)=>s+Math.round((i.qty||0)*100)+Math.round(i.unitPrice||0),0);
+  if(fifoCache && fifoSig===sig) return fifoCache;
   const lots=[...inventory].sort((a,b)=>a.date.localeCompare(b.date))
     .map(inv=>({...inv,consumed:0,remaining:inv.qty}));
   const recs=[...records].sort((a,b)=>a.date.localeCompare(b.date));
@@ -1310,9 +1330,11 @@ function calcFifo(){
     consumptions.push({date:rec.date,cageId:rec.cageId,feed:rec.feed,cost,
       avgPrice:totalQ>0?Math.round(cost/totalQ):0,shortage:Math.max(0,rec.feed-totalQ)});
   }
-  return{lots,consumptions,
+  fifoCache={lots,consumptions,
     totalStock:lots.reduce((s,l)=>s+l.remaining,0),
     totalValue:lots.reduce((s,l)=>s+l.remaining*l.unitPrice,0)};
+  fifoSig=sig;
+  return fifoCache;
 }
 function getFeedCost(cageId,from,to){
   return calcFifo().consumptions
@@ -1629,7 +1651,7 @@ function deleteShip(id){
 function renderShipTable(){
   const tbody=$('shipTableBody');
   const cardBox=$('shipCardList');
-  const list=[...ships].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
+  const list=[...ships].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);
   const rows=list.map(s=>{
     const cage=getCage(s.cageId);
     const sp=cageCurrentSpecies(cage,s.date).name||'—';
@@ -1669,7 +1691,7 @@ function renderShipTable(){
 }
 function renderSalesChart(){
   const months=[];
-  for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);months.push(d.toISOString().slice(0,7));}
+  for(let i=5;i>=0;i--){months.push(monthKeyLocal(-i));}
   const data=months.map(m=>ships.filter(s=>s.date.startsWith(m)).reduce((s,sh)=>s+sh.amount,0));
   if(salesChartInst){salesChartInst.destroy();salesChartInst=null;}
   const ctx=$('salesChart');
@@ -1682,7 +1704,7 @@ function renderSalesChart(){
 }
 function renderSalesSummary(){
   const totalSales=ships.reduce((s,sh)=>s+sh.amount,0);
-  const thisMonth=new Date().toISOString().slice(0,7);
+  const thisMonth=monthKeyLocal(0);
   const monthlySales=ships.filter(s=>s.date.startsWith(thisMonth)).reduce((s,sh)=>s+sh.amount,0);
   const bySpecies={};
   ships.forEach(sh=>{const sp=cageCurrentSpecies(getCage(sh.cageId),sh.date).name||'不明';bySpecies[sp]=(bySpecies[sp]||0)+sh.amount;});
@@ -1805,7 +1827,7 @@ function renderCostHistory(){
   const area=$('costHistoryArea'); if(!area) return;
   if(kind==='feed'){
     const fifo=calcFifo();
-    area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>仕入日</th><th>品名</th><th>仕入量</th><th>単価</th><th>残量</th><th>状態</th></tr></thead><tbody>${fifo.lots.map(l=>`<tr><td>${fmtDate(l.date)}</td><td>${l.name}</td><td>${l.qty.toFixed(1)}kg</td><td>¥${fmtNum(l.unitPrice)}/kg</td><td>${l.remaining.toFixed(1)}kg</td><td>${l.remaining<=0?'消費済':l.remaining<l.qty*.2?'残少':'在庫あり'}</td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">仕入記録がありません</td></tr>`}</tbody></table></div>`;
+    area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>仕入日</th><th>品名</th><th>仕入量</th><th>単価</th><th>残量</th><th>状態</th></tr></thead><tbody>${fifo.lots.slice(0,costHistoryLimit).map(l=>`<tr><td>${fmtDate(l.date)}</td><td>${l.name}</td><td>${l.qty.toFixed(1)}kg</td><td>¥${fmtNum(l.unitPrice)}/kg</td><td>${l.remaining.toFixed(1)}kg</td><td>${l.remaining<=0?'消費済':l.remaining<l.qty*.2?'残少':'在庫あり'}</td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">仕入記録がありません</td></tr>`}</tbody></table></div>${fifo.lots.length>costHistoryLimit?`<button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="showMoreCostHistory()">さらに表示（${costHistoryLimit}/${fifo.lots.length}件）</button>`:''}`;
     return;
   }
   const q=($('costSearchText')?.value||'').trim();
@@ -1817,7 +1839,9 @@ function renderCostHistory(){
   if(type) list=list.filter(c=>c.type===type);
   if(cageId==='__common') list=list.filter(c=>!c.cageId); else if(cageId) list=list.filter(c=>c.cageId===cageId);
   if(q) list=list.filter(c=>{const item=costItems.find(x=>x.id===c.itemId)||{};return (item.name||'').includes(q)||(c.note||'').includes(q);});
-  area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th><th></th></tr></thead><tbody>${list.length?list.map(c=>costRowHtml(c)).join(''):`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx-m)">該当するコスト記録がありません</td></tr>`}</tbody></table></div>`;
+  const total=list.length;
+  const shown=list.slice(0,costHistoryLimit);
+  area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th><th></th></tr></thead><tbody>${shown.length?shown.map(c=>costRowHtml(c)).join(''):`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx-m)">該当するコスト記録がありません</td></tr>`}</tbody></table></div>${total>shown.length?`<button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="showMoreCostHistory()">さらに表示（${shown.length}/${total}件）</button>`:''}`;
 }
 function renderFeedInventory(){
   const fifo=calcFifo();
@@ -1886,13 +1910,17 @@ function getTotalIndirect(from,to){
   return costs.filter(c=>c.type==='indirect'&&(!from||c.date>=from)&&(!to||c.date<=to)).reduce((s,c)=>s+c.amount,0);
 }
 function getAllocDetail(from,to){
+  const key=(from||'')+'|'+(to||'')+'|'+dataSig();
+  if(allocCache.has(key)) return allocCache.get(key);
   const totalInd=getTotalIndirect(from,to);
   const aw=getAllocWeights(from,to);
   const n=aw.list.length||1;
-  return aw.list.map(x=>{
+  const rows=aw.list.map(x=>{
     const ratio=aw.total?x.weight/aw.total:1/n;
     return{cage:x.cage,weight:x.weight,ratio,amount:Math.round(totalInd*ratio)};
   });
+  allocCache.set(key,rows);
+  return rows;
 }
 function updatePLPeriodLabel(kind){
   const el=$('plPeriodLabel'); if(!el) return;
@@ -2019,17 +2047,28 @@ function renderPLMargin(from,to){
     </tr>`).join('')}</tbody>
   </table></div>`;
 }
+function getMonthStats(m){
+  const key=m+'|'+dataSig();
+  if(monthCostCache.has(key)) return monthCostCache.get(key);
+  const from=m+'-01', to=monthLastDay(m);
+  const sales=ships.filter(s=>s.date.startsWith(m)).reduce((sum,sh)=>sum+sh.amount,0);
+  const cost=getAllCost(from,to).total;
+  const row={sales,cost,profit:sales-cost};
+  monthCostCache.set(key,row);
+  return row;
+}
 function renderPLTrend(from,to){
   const months=[];
   if(from&&to){
     const d=new Date(from.slice(0,7)+'-01'); const end=to.slice(0,7);
-    while(d.toISOString().slice(0,7)<=end){months.push(d.toISOString().slice(0,7)); d.setMonth(d.getMonth()+1);}
+    while(fmtLocalDate(d).slice(0,7)<=end){months.push(fmtLocalDate(d).slice(0,7)); d.setMonth(d.getMonth()+1);}
   } else {
-    for(let i=11;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);months.push(d.toISOString().slice(0,7));}
+    for(let i=11;i>=0;i--){months.push(monthKeyLocal(-i));}
   }
-  const mSales=months.map(m=>ships.filter(s=>s.date.startsWith(m)).reduce((s,sh)=>s+sh.amount,0));
-  const mCosts=months.map(m=>getAllCost(m+'-01',m+'-31').total);
-  const mProfit=months.map((_,i)=>mSales[i]-mCosts[i]);
+  const monthStats=months.map(m=>getMonthStats(m));
+  const mSales=monthStats.map(x=>x.sales);
+  const mCosts=monthStats.map(x=>x.cost);
+  const mProfit=monthStats.map(x=>x.profit);
   if(plChartInst){plChartInst.destroy();plChartInst=null;}
   const ctx=$('plTrendChart');
   if(ctx) plChartInst=new Chart(ctx.getContext('2d'),{
@@ -2090,23 +2129,26 @@ function renderHistory(){
   const thead=$('histHead'), tbody=$('histBody');
   if(type==='feed'){
     thead.innerHTML='<tr><th>日付</th><th>生簀</th><th>給餌</th><th>死亡</th><th>水温</th><th>作業</th></tr>';
-    const recs=[...records].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,60);
+    const allRecs=[...records].sort((a,b)=>b.date.localeCompare(a.date));
+    const recs=allRecs.slice(0,settingsHistoryLimit);
     tbody.innerHTML=recs.map(r=>`<tr>
       <td>${r.date}</td><td>${getCage(r.cageId).name||'—'}</td>
       <td>${r.feed||'—'}kg</td><td>${r.dead||0}尾</td><td>${r.temp||'—'}℃</td>
       <td style="font-size:12px">${r.workCat?`[${r.workCat}] `:''} ${r.workNote||''}</td>
-    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
+    </tr>`).join('')+(allRecs.length>recs.length?`<tr><td colspan="6"><button class="btn btn-ghost" style="width:100%" onclick="showMoreSettingsHistory()">さらに表示（${recs.length}/${allRecs.length}件）</button></td></tr>`:'')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   } else if(type==='ship'){
     thead.innerHTML='<tr><th>日付</th><th>生簀</th><th>出荷先</th><th>尾数</th><th>重量</th><th>金額</th></tr>';
-    const list=[...ships].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,60);
+    const allShips=[...ships].sort((a,b)=>b.date.localeCompare(a.date));
+    const list=allShips.slice(0,settingsHistoryLimit);
     tbody.innerHTML=list.map(s=>`<tr>
       <td>${s.date}</td><td>${getCage(s.cageId).name||'—'}</td>
       <td>${s.dest||'—'}</td><td>${s.count?fmtNum(s.count)+'尾':'—'}</td>
       <td>${s.weight?s.weight+'kg':'—'}</td><td style="font-weight:600">¥${fmtNum(s.amount)}</td>
-    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
+    </tr>`).join('')+(allShips.length>list.length?`<tr><td colspan="6"><button class="btn btn-ghost" style="width:100%" onclick="showMoreSettingsHistory()">さらに表示（${list.length}/${allShips.length}件）</button></td></tr>`:'')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   } else {
     thead.innerHTML='<tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th></tr>';
-    const list=[...costs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,60);
+    const allCosts=[...costs].sort((a,b)=>b.date.localeCompare(a.date));
+    const list=allCosts.slice(0,settingsHistoryLimit);
     tbody.innerHTML=list.map(c=>{
       const item=costItems.find(x=>x.id===c.itemId)||{name:'—'};
       return`<tr>
@@ -2116,7 +2158,7 @@ function renderHistory(){
         <td style="font-weight:600">¥${fmtNum(c.amount)}</td>
         <td style="font-size:12px">${c.note||''}</td>
       </tr>`;
-    }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
+    }).join('')+(allCosts.length>list.length?`<tr><td colspan="6"><button class="btn btn-ghost" style="width:100%" onclick="showMoreSettingsHistory()">さらに表示（${list.length}/${allCosts.length}件）</button></td></tr>`:'')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   }
 }
 
