@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-<title>赤松水産 養殖管理 v19</title>
+<title>赤松水産 養殖管理 v25</title>
 <script>/*!
  * Chart.js v4.5.1
  * https://www.chartjs.org
@@ -380,6 +380,77 @@ tbody tr:hover td{background:var(--surface2);}
   .form-row3.keep-3 .kpi-val{font-size:16px!important;}
 }
 
+
+/* v20 UI refinements */
+.dash-cage-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}
+.dash-cage-card{border:1px solid var(--border-l);border-radius:var(--r-md);padding:12px;background:var(--surface);box-shadow:var(--sh-xs);}
+.dash-cage-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.dash-cage-name{font-weight:800;color:var(--tx);font-size:14px;}
+.dash-cage-sp{font-size:12px;color:var(--tx-m);margin-top:2px;}
+.dash-cage-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0;}
+.dash-cage-metric{background:var(--surface2);border-radius:var(--r-sm);padding:7px 8px;}
+.dash-cage-metric .m-label{font-size:10px;color:var(--tx-m);font-weight:700;margin-bottom:2px;}
+.dash-cage-metric .m-val{font-size:13px;font-weight:700;color:var(--tx);}
+.details-box{border-top:1px solid var(--border-l);padding-top:10px;margin-top:10px;}
+.details-box summary{cursor:pointer;list-style:none;font-size:12px;font-weight:700;color:var(--tx-s);padding:8px 0;}
+.details-box summary::-webkit-details-marker{display:none;}
+.details-box summary:before{content:'＋';display:inline-block;margin-right:6px;color:var(--aqua);font-weight:800;}
+.details-box[open] summary:before{content:'−';}
+.sales-rank{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.sales-rank-row{display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px;}
+.sales-rank-row span:first-child{font-weight:700;color:var(--tx);}
+.sales-rank-row span:last-child{font-weight:800;color:var(--aqua);}
+.empty-note{color:var(--tx-m);font-size:13px;padding:10px 0;}
+@media(max-width:768px){
+  .dash-cage-list{grid-template-columns:1fr;}
+  .dash-cage-card{padding:11px;}
+}
+
+
+/* v21 mobile UX refinements */
+.subtab-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.subtab{border:1px solid var(--border);background:var(--surface);color:var(--tx-s);border-radius:var(--r-sm);padding:8px 16px;font-weight:700;min-height:40px;}
+.subtab.active{background:var(--aqua);border-color:var(--aqua);color:#fff;}
+.cost-pane{display:none}.cost-pane.active{display:block}
+.mobile-card-list{display:none;}
+.ship-card,.cost-mini-card{background:var(--surface2);border:1px solid var(--border-l);border-radius:var(--r-md);padding:12px;margin-bottom:10px;}
+.ship-card-head,.cost-mini-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.ship-title,.cost-mini-title{font-weight:800;color:var(--tx);font-size:14px;}
+.ship-sub,.cost-mini-sub{color:var(--tx-m);font-size:12px;margin-top:2px;}
+.ship-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.ship-cell{background:var(--surface);border-radius:8px;padding:8px;}
+.ship-cell .lbl{font-size:11px;color:var(--tx-m);font-weight:700;margin-bottom:2px}.ship-cell .val{font-size:13px;font-weight:700;color:var(--tx)}
+.cost-actions{display:flex;gap:4px;justify-content:flex-end;align-items:center;}
+.kpi-val.compact-money{font-size:20px;white-space:normal;overflow-wrap:anywhere;}
+.period-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;cursor:pointer;font-weight:700;}
+.period-summary::-webkit-details-marker{display:none}.period-summary::after{content:'▼';font-size:11px;color:var(--tx-m)}
+.period-details[open] .period-summary::after{content:'▲'}
+.search-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;}
+@media(max-width:768px){
+  .record-main-row{grid-template-columns:1fr!important;}
+  .desktop-table-on-mobile{display:none;}
+  .mobile-card-list{display:block;}
+  .kpi-row{gap:8px;}
+  .kpi{padding:12px 10px;}
+  .kpi-val.compact-money{font-size:18px;}
+  .pl-menu-card{padding:12px;}
+  .period-card{padding:12px;}
+  .search-row{grid-template-columns:1fr 1fr;}
+  .settings-nav-grouped .settings-group{padding:12px;}
+}
+@media(max-width:420px){.kpi-val.compact-money{font-size:16px}.ship-grid{grid-template-columns:1fr 1fr}.subtab{flex:1;padding:8px 10px}}
+
+/* v23 refinements */
+.quick-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 6px;}
+.quick-modal-btn{border:1px solid var(--border);background:var(--surface2);border-radius:var(--r-md);padding:14px 10px;font-weight:800;color:var(--tx);font-size:15px;min-height:58px;}
+.quick-modal-btn:active{transform:translateY(1px)}
+.sales-rank-row em{font-style:normal;color:var(--tx-m);font-size:12px;margin-left:4px;}
+.alloc-details[open]{padding-bottom:16px;}
+@media(max-width:768px){
+  .kpi-val.compact-money{font-size:17px!important;line-height:1.15;}
+  .sales-rank-row{padding:9px 10px;}
+}
+
 </style>
 </head>
 <body>
@@ -427,9 +498,9 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="mob-title">赤松<span>水産</span></div>
   </div>
   <div class="mob-actions">
-    <button class="mob-record-btn" onclick="showPage('record')" title="記録入力">
+    <button class="mob-record-btn" onclick="openQuickRegisterMenu()" title="登録メニュー">
       <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828z"/></svg>
-      <span>記録</span>
+      <span>＋登録</span>
     </button>
   </div>
 </div>
@@ -493,10 +564,7 @@ tbody tr:hover td{background:var(--surface2);}
       </div>
       <button class="btn btn-primary btn-sm" onclick="showPage('record')">記録入力</button>
     </div>
-    <div class="table-wrap">
-      <table><thead><tr><th>生簀</th><th>魚種</th><th>現在尾数</th><th>給餌</th><th>死亡</th><th>水温</th><th></th></tr></thead>
-      <tbody id="dashCageTable"></tbody></table>
-    </div>
+    <div id="dashCageCards" class="dash-cage-list"></div>
   </div>
 
   <div id="dashProfitRank" style="margin-bottom:14px"></div>
@@ -533,6 +601,8 @@ tbody tr:hover td{background:var(--surface2);}
         <div class="form-group"><label>死亡尾数</label><input type="number" id="recDead" placeholder="0" min="0" inputmode="numeric"></div>
         <div class="form-group"><label>水温 (℃)</label><input type="number" id="recTemp" placeholder="20.0" step="0.1" inputmode="decimal"></div>
       </div>
+      <details class="details-box">
+        <summary>詳細入力（投薬・天気・作業・日誌）</summary>
       <div class="form-row2" style="margin-bottom:12px">
         <div class="form-group"><label>投薬</label>
           <select id="recMed">
@@ -556,6 +626,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="form-group" style="margin-bottom:14px">
         <label>日誌メモ</label><textarea id="recNote" placeholder="気になったことなど"></textarea>
       </div>
+      </details>
       <div class="form-actions">
         <button class="btn btn-primary" onclick="saveRecord()">保存</button>
         <button class="btn btn-ghost" onclick="initRecord()">クリア</button>
@@ -576,9 +647,6 @@ tbody tr:hover td{background:var(--surface2);}
 
 <!-- ▼ 出荷 -->
 <div class="page" id="page-ship">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:12px" class="hide-pc">
-    <button class="btn btn-primary btn-sm" onclick="openShipModal()">出荷を登録</button>
-  </div>
   <div id="salesSummaryBox" style="margin-bottom:14px"></div>
   <div class="card">
     <div class="card-hd">
@@ -588,7 +656,8 @@ tbody tr:hover td{background:var(--surface2);}
       </div>
       <button class="btn btn-primary btn-sm" onclick="openShipModal()">出荷を登録</button>
     </div>
-    <div class="table-wrap">
+    <div id="shipCardList" class="mobile-card-list"></div>
+    <div class="table-wrap desktop-table-on-mobile">
       <table><thead><tr><th>日付</th><th>生簀</th><th>魚種</th><th>出荷先</th><th>尾数</th><th>重量</th><th>単価</th><th>売上</th><th></th></tr></thead>
       <tbody id="shipTableBody"></tbody></table>
     </div>
@@ -604,44 +673,65 @@ tbody tr:hover td{background:var(--surface2);}
 
 <!-- ▼ 原価 -->
 <div class="page" id="page-cost">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:12px" class="hide-pc">
-    <button class="btn btn-primary btn-sm" onclick="openCostModal()">コストを入力</button>
+  <div class="subtab-row">
+    <button class="subtab active" data-cost-tab="cost" onclick="showCostTab('cost')">コスト</button>
+    <button class="subtab" data-cost-tab="feed" onclick="showCostTab('feed')">仕入</button>
+    <button class="subtab" data-cost-tab="history" onclick="showCostTab('history')">履歴</button>
   </div>
-  <div class="card">
-    <div class="card-hd">
-      <div class="card-hd-l">
-        <svg viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2"/></svg>
-        コスト記録
+
+  <div id="cost-pane-cost" class="cost-pane active">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-hd-l">
+          <svg viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2"/></svg>
+          コスト入力・直近履歴
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openCostModal()">コストを入力</button>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="openCostModal()">コストを入力</button>
-    </div>
-    <div class="table-wrap">
-      <table><thead><tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th><th></th></tr></thead>
-      <tbody id="costTableBody"></tbody></table>
+      <div class="table-wrap desktop-table-on-mobile">
+        <table><thead><tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th><th></th></tr></thead>
+        <tbody id="costTableBody"></tbody></table>
+      </div>
+      <div id="costCardList" class="mobile-card-list"></div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-hd">
-      <div class="card-hd-l">
-        <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
-        飼料在庫（FIFO管理）
+  <div id="cost-pane-feed" class="cost-pane">
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-hd-l">
+          <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
+          飼料在庫・仕入
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openFeedModal()">仕入登録</button>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="openFeedModal()">仕入登録</button>
-    </div>
-    <div class="g2-mob" id="feedStock" style="margin-bottom:12px"></div>
-    <div class="table-wrap">
-      <table><thead><tr><th>仕入日</th><th>品名</th><th>仕入量</th><th>単価</th><th>残量</th><th>状態</th><th></th></tr></thead>
-      <tbody id="feedInvBody"></tbody></table>
+      <div class="g2-mob" id="feedStock" style="margin-bottom:12px"></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>仕入日</th><th>品名</th><th>仕入量</th><th>単価</th><th>残量</th><th>状態</th><th></th></tr></thead>
+        <tbody id="feedInvBody"></tbody></table>
+      </div>
     </div>
   </div>
+
+  <div id="cost-pane-history" class="cost-pane">
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-l">原価履歴検索</div></div>
+      <div class="search-row">
+        <div class="form-group"><label>検索</label><input id="costSearchText" placeholder="費目・メモ" oninput="renderCostHistory()"></div>
+        <div class="form-group"><label>生簀</label><select id="costSearchCage" onchange="renderCostHistory()"><option value="">すべて</option></select></div>
+        <div class="form-group"><label>区分</label><select id="costSearchType" onchange="renderCostHistory()"><option value="">すべて</option><option value="direct">直接費</option><option value="indirect">間接費</option></select></div>
+        <div class="form-group"><label>表示</label><select id="costSearchKind" onchange="renderCostHistory()"><option value="cost">コスト</option><option value="feed">仕入</option></select></div>
+      </div>
+      <div id="costHistoryArea"></div>
+    </div>
   </div>
+</div>
 
 <!-- ▼ 損益 -->
 <div class="page" id="page-pl">
-  <div class="card" style="margin-top:0;margin-bottom:14px">
-    <div class="card-hd"><div class="card-hd-l">期間選択</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+  <details class="card period-card period-details" style="margin-top:0;margin-bottom:14px">
+    <summary class="period-summary"><span id="plPeriodLabel">期間：今月</span></summary>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
       <button class="btn btn-ghost btn-sm" onclick="setPLPeriod('thisMonth')">今月</button>
       <button class="btn btn-ghost btn-sm" onclick="setPLPeriod('prevMonth')">前月</button>
       <button class="btn btn-ghost btn-sm" onclick="setPLPeriod('thisYear')">今年</button>
@@ -649,11 +739,11 @@ tbody tr:hover td{background:var(--surface2);}
     </div>
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
       <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>開始日</label>
-        <input type="date" id="plFrom" onchange="renderPL(curPLTab)"></div>
+        <input type="date" id="plFrom" onchange="renderPL(curPLTab);updatePLPeriodLabel()"></div>
       <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>終了日</label>
-        <input type="date" id="plTo" onchange="renderPL(curPLTab)"></div>
+        <input type="date" id="plTo" onchange="renderPL(curPLTab);updatePLPeriodLabel()"></div>
     </div>
-  </div>
+  </details>
   <div class="pl-menu-card card">
     <label class="pl-menu-label">分析メニュー</label>
     <select id="plMenuSelect" class="pl-menu-select" onchange="renderPL(this.value)">
@@ -697,7 +787,7 @@ tbody tr:hover td{background:var(--surface2);}
     </div>
     <div class="settings-group"><div class="settings-group-title">マスタ管理</div>
       <button class="settings-tab" data-tab="cages" onclick="renderSettings('cages')">生簀管理</button>
-      <button class="settings-tab" data-tab="initial" onclick="renderSettings('initial')">初期登録</button>
+      <button class="settings-tab" data-tab="initial" onclick="renderSettings('initial')">飼育開始登録</button>
       <button class="settings-tab" data-tab="species" onclick="renderSettings('species')">魚種管理</button>
       <button class="settings-tab" data-tab="costItems" onclick="renderSettings('costItems')">費用マスタ</button>
     </div>
@@ -707,7 +797,7 @@ tbody tr:hover td{background:var(--surface2);}
       <button class="settings-tab" data-tab="color" onclick="renderSettings('color')">カラー設定</button>
     </div>
     <div class="settings-group"><div class="settings-group-title">データ管理</div>
-      <button class="settings-tab" data-tab="export" onclick="renderSettings('export')">CSV</button>
+      <button class="settings-tab" data-tab="export" onclick="renderSettings('export')">データ出力</button>
       <button class="settings-tab" data-tab="backup" onclick="renderSettings('backup')">バックアップ</button>
       <button class="settings-tab" data-tab="reset" onclick="renderSettings('reset')">初期化</button>
     </div>
@@ -738,14 +828,14 @@ tbody tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
-  <!-- 初期登録 -->
+  <!-- 飼育開始登録 -->
   <div id="set-initial" class="set-pane card" style="display:none;margin-top:0">
-    <div class="card-hd"><div class="card-hd-l">初期原価登録</div></div>
+    <div class="card-hd"><div class="card-hd-l">飼育開始原価登録</div></div>
     <div class="alert alert-info" style="margin-bottom:12px">
       既に育成中の魚は、過去データをすべて入力せず、開始時点の原価だけを登録します。現在尾数・平均体重・魚種・導入日は「生簀管理」で入力してください。
     </div>
     <div class="alert alert-ok" style="margin-bottom:12px">
-      初期原価は、原価データに「初期登録原価」として自動登録・更新します。粗利益計算にも反映されます。
+      初期原価は、原価データに「飼育開始登録原価」として自動登録・更新します。粗利益計算にも反映されます。
     </div>
     <div class="table-wrap">
       <table>
@@ -840,21 +930,21 @@ tbody tr:hover td{background:var(--surface2);}
     <div id="unitsList"></div>
   </div>
 
-  <!-- CSVエクスポート -->
+  <!-- データ出力 -->
   <div id="set-export" class="set-pane card" style="display:none;margin-top:0">
-    <div class="card-hd"><div class="card-hd-l">CSVエクスポート</div></div>
+    <div class="card-hd"><div class="card-hd-l">データ出力</div></div>
     <div style="display:flex;flex-direction:column;gap:10px;max-width:360px">
       <button class="btn btn-ghost" onclick="exportCSV('records')">
         <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        給餌記録をCSV出力
+        給餌記録をExcel(CSV)出力
       </button>
       <button class="btn btn-ghost" onclick="exportCSV('ships')">
         <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        出荷記録をCSV出力
+        出荷記録をExcel(CSV)出力
       </button>
       <button class="btn btn-ghost" onclick="exportCSV('costs')">
         <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        コスト記録をCSV出力
+        コスト記録をExcel(CSV)出力
       </button>
     </div>
   </div>
@@ -864,8 +954,8 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="card-hd"><div class="card-hd-l">バックアップ・復元</div></div>
     <div class="alert alert-info" style="margin-bottom:14px">定期的にJSONバックアップを取ってください。</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
-      <button class="btn btn-primary" onclick="exportJSON()">JSONを保存</button>
-      <button class="btn btn-ghost" onclick="$('importFile').click()">JSONを読込</button>
+      <button class="btn btn-primary" onclick="exportJSON()">バックアップ(JSON)を保存</button>
+      <button class="btn btn-ghost" onclick="$('importFile').click()">バックアップ(JSON)を読込</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
     </div>
     <div class="section-label">バックアップ履歴（最近10件）</div>
@@ -916,6 +1006,19 @@ tbody tr:hover td{background:var(--surface2);}
 <div id="toast"></div>
 
 <!-- 確認ダイアログ -->
+<div class="modal-bg" id="quickRegisterModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-hd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>登録メニュー</div>
+    <div class="quick-modal-grid">
+      <button class="quick-modal-btn" onclick="closeModal('quickRegisterModal');showPage('record')">日次記録</button>
+      <button class="quick-modal-btn" onclick="closeModal('quickRegisterModal');showPage('ship');setTimeout(openShipModal,80)">出荷登録</button>
+      <button class="quick-modal-btn" onclick="closeModal('quickRegisterModal');showPage('cost');setTimeout(()=>{showCostTab('cost');openCostModal();},80)">コスト登録</button>
+      <button class="quick-modal-btn" onclick="closeModal('quickRegisterModal');showPage('cost');setTimeout(()=>{showCostTab('feed');openFeedModal();},80)">飼料仕入</button>
+    </div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal('quickRegisterModal')">閉じる</button></div>
+  </div>
+</div>
+
 <div class="modal-bg" id="confirmModal">
   <div class="modal" style="max-width:320px;text-align:center">
     <div class="confirm-icon"><svg viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
@@ -1037,13 +1140,30 @@ tbody tr:hover td{background:var(--surface2);}
 
 <script>
 // =========================================================
-// 赤松水産 養殖管理システム v15 - Main JS
+// 赤松水産 養殖管理システム v25 - Main JS
 // =========================================================
 const $  = id => document.getElementById(id);
 const genId   = () => Math.random().toString(36).slice(2,10);
-const today   = () => new Date().toISOString().slice(0,10);
+function fmtLocalDate(d=new Date()){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+const today   = () => fmtLocalDate(new Date());
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return fmtLocalDate(d); }
 const fmtNum  = n  => (n==null)?'—':Number(n).toLocaleString('ja-JP');
 const fmtDate = d  => d ? d.slice(5).replace('-','/') : '—';
+const fmtMoneyShort = n => {
+  if(n==null || isNaN(n)) return '—';
+  const sign = Number(n) < 0 ? '-' : '';
+  const abs = Math.abs(Number(n));
+  if(abs >= 1000000) return sign + Math.round(abs/10000).toLocaleString('ja-JP') + '万円';
+  if(abs >= 10000) return sign + (abs/10000).toFixed(abs%10000?1:0).replace(/\.0$/,'') + '万円';
+  return sign + '¥' + Math.round(abs).toLocaleString('ja-JP');
+};
+const shortText = (v,len=8) => { const t=String(v||'—'); return t.length>len ? t.slice(0,len)+'…' : t; };
+
 
 function toast(msg){
   const el=$('toast'); el.textContent=msg; el.classList.add('show');
@@ -1141,7 +1261,7 @@ function showPage(name){
   if(name==='record')   initRecord();
   if(name==='ship')     renderShip();
   if(name==='cost')     renderCost();
-  if(name==='pl')       renderPL(curPLTab);
+  if(name==='pl')       { if(!$('plFrom').value && !$('plTo').value) setPLPeriod('thisMonth'); else renderPL(curPLTab); }
   if(name==='settings') renderSettings(curSetTab);
 }
 
@@ -1151,7 +1271,9 @@ const getSpecies = id => species.find(s=>s.id===id)||{};
 const isActive = x => x && x.active !== false;
 const activeCages = () => cages.filter(isActive);
 const activeSpecies = () => species.filter(isActive);
-const activeCostItems = () => costItems.filter(isActive);
+const feedCostItemNames = ['配合飼料','生餌','飼料費','えさ代','餌代'];
+const isFeedCostItem = item => !!item && item.type === 'direct' && feedCostItemNames.some(n => String(item.name||'').includes(n));
+const activeCostItems = () => costItems.filter(x => isActive(x) && !isFeedCostItem(x));
 
 function cageCurrentSpecies(cage, onDate){
   const dt=onDate||today();
@@ -1201,7 +1323,7 @@ function getFeedCost(cageId,from,to){
 // ─── 原価計算エンジン ──────────────────────────────────────
 function getUnitCost(cageId,upToDate){
   const living=getLiving(cageId,upToDate); if(!living) return 0;
-  const d=costs.filter(c=>c.cageId===cageId&&c.type==='direct'&&(!upToDate||c.date<=upToDate)).reduce((s,c)=>s+c.amount,0);
+  const d=costs.filter(c=>c.cageId===cageId&&c.type==='direct'&&!isFeedCostItem(costItems.find(x=>x.id===c.itemId))&&(!upToDate||c.date<=upToDate)).reduce((s,c)=>s+c.amount,0);
   const f=getFeedCost(cageId,null,upToDate);
   return Math.round((d+f)/living);
 }
@@ -1214,11 +1336,13 @@ function getIndirectForCage(cageId,from,to){
   return row?row.amount:0;
 }
 function getCageCost(cageId,from,to){
-  const direct  =costs.filter(c=>c.cageId===cageId&&c.type==='direct'&&(!from||c.date>=from)&&(!to||c.date<=to)).reduce((s,c)=>s+c.amount,0);
+  const direct  =costs.filter(c=>c.cageId===cageId&&c.type==='direct'&&!isFeedCostItem(costItems.find(x=>x.id===c.itemId))&&(!from||c.date>=from)&&(!to||c.date<=to)).reduce((s,c)=>s+c.amount,0);
   const feedFifo=getFeedCost(cageId,from,to);
+  // 減耗は死亡尾数・生残率で管理し、原価には加算しない。
+  // 飼料費・直接費は既に投入済み原価に含まれているため、減耗費を足すと二重計上になる。
   const wastage =getWastageCost(cageId,from,to);
   const indirect=getIndirectForCage(cageId,from,to);
-  return{direct,feedFifo,wastage,indirect,total:direct+feedFifo+wastage+indirect};
+  return{direct,feedFifo,wastage,indirect,total:direct+feedFifo+indirect};
 }
 function getAllCost(from,to){
   return cages.reduce((acc,c)=>{
@@ -1254,33 +1378,40 @@ function renderDash(){
     </div>
     <div class="kpi k-gold">
       <div class="kpi-label">本日の出荷</div>
-      <div class="kpi-val">${todaySales>0?'¥'+fmtNum(todaySales):'—'}</div>
+      <div class="kpi-val compact-money" title="${todaySales>0?'¥'+fmtNum(todaySales):''}">${todaySales>0?fmtMoneyShort(todaySales):'—'}</div>
       <div class="kpi-sub">${todayShips.length}件</div>
     </div>
     <div class="kpi k-ok">
-      <div class="kpi-label">現在尾数</div>
+      <div class="kpi-label">総飼育尾数</div>
       <div class="kpi-val">${fmtNum(totalLiving)}<span style="font-size:14px;font-weight:400;margin-left:3px">尾</span></div>
       <div class="kpi-sub">${avgTemp?`平均水温 ${avgTemp}℃`:'水温未記録'}</div>
     </div>`;
 
-  // 生簀別ステータス
+  // 生簀別ステータス（スマホ向けカード表示）
   if(!activeCages().length){
-    $('dashCageTable').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx-m)">生簀が登録されていません<br><button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="showPage('settings');renderSettings('cages')">生簀を追加</button></td></tr>`;
+    $('dashCageCards').innerHTML=`<div style="text-align:center;padding:24px;color:var(--tx-m);grid-column:1/-1">生簀が登録されていません<br><button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="showPage('settings');renderSettings('cages')">生簀を追加</button></div>`;
   } else {
-    $('dashCageTable').innerHTML=activeCages().map(cage=>{
+    $('dashCageCards').innerHTML=activeCages().map(cage=>{
       const sp=cageCurrentSpecies(cage).name||'—';
       const rec=records.find(r=>r.cageId===cage.id&&r.date===td);
       const living=getLiving(cage.id);
       const rate=cage.count?Math.round(living/cage.count*100):0;
-      return`<tr>
-        <td><strong>${cage.name}</strong></td>
-        <td>${sp}</td>
-        <td style="font-weight:600">${fmtNum(living)} <span style="font-size:11px;color:var(--tx-m)">(${rate}%)</span></td>
-        <td>${rec?.feed?rec.feed+'kg':'<span style="color:var(--warn);font-size:12px">未入力</span>'}</td>
-        <td>${rec?.dead>0?`<span style="color:var(--danger);font-weight:700">${rec.dead}</span>`:'0'}</td>
-        <td>${rec?.temp?rec.temp+'℃':'—'}</td>
-        <td><button class="btn btn-ghost btn-xs" onclick="quickRecord('${cage.id}')">入力</button></td>
-      </tr>`;
+      const feedTxt=rec?.feed?rec.feed+'kg':'未入力';
+      const feedColor=rec?.feed?'var(--tx)':'var(--warn)';
+      const deadTxt=rec?.dead>0?rec.dead+'尾':'0尾';
+      const deadColor=rec?.dead>0?'var(--danger)':'var(--tx)';
+      return`<div class="dash-cage-card">
+        <div class="dash-cage-head">
+          <div><div class="dash-cage-name">${cage.name}</div><div class="dash-cage-sp">${sp}</div></div>
+          <button class="btn btn-ghost btn-xs" onclick="quickRecord('${cage.id}')">入力</button>
+        </div>
+        <div class="dash-cage-grid">
+          <div class="dash-cage-metric"><div class="m-label">現在尾数</div><div class="m-val">${fmtNum(living)}尾</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">生残率 ${rate}%</div></div>
+          <div class="dash-cage-metric"><div class="m-label">給餌</div><div class="m-val" style="color:${feedColor}">${feedTxt}</div></div>
+          <div class="dash-cage-metric"><div class="m-label">死亡</div><div class="m-val" style="color:${deadColor}">${deadTxt}</div></div>
+          <div class="dash-cage-metric"><div class="m-label">水温</div><div class="m-val">${rec?.temp?rec.temp+'℃':'—'}</div></div>
+        </div>
+      </div>`;
     }).join('');
   }
 
@@ -1291,14 +1422,22 @@ function renderDash(){
       alerts.push({type:'warn',msg:`${cage.name}：本日の記録が未入力です`});
   });
   const fifo=calcFifo();
-  if(fifo.totalStock<50) alerts.push({type:'danger',msg:`飼料在庫が残り${fifo.totalStock.toFixed(0)}kgです（要発注）`});
+  const last7Feed=records.filter(r=>r.date>=daysAgo(7)).reduce((sum,r)=>sum+(r.feed||0),0);
+  const avgDailyFeed=last7Feed/7;
+  if(fifo.totalStock<50){
+    const daysLeft=avgDailyFeed>0?Math.floor(fifo.totalStock/avgDailyFeed):null;
+    const msg=daysLeft!==null
+      ? `飼料在庫：残り${fifo.totalStock.toFixed(0)}kg／約${daysLeft}日分（要発注）`
+      : `飼料在庫：残り${fifo.totalStock.toFixed(0)}kg（要発注）`;
+    alerts.push({type:'danger',msg});
+  }
   $('dashAlerts').innerHTML=alerts.length
     ? alerts.map(a=>`<div class="alert alert-${a.type==='danger'?'danger':'warn'}">${a.msg}</div>`).join('')
     : `<div class="alert alert-ok">本日のアラートはありません</div>`;
 
   // 7日間給餌グラフ
   const days=[];
-  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10));}
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(fmtLocalDate(d));}
   const feedData=days.map(d=>records.filter(r=>r.date===d).reduce((s,r)=>s+(r.feed||0),0));
   if(dashChartInst){dashChartInst.destroy();dashChartInst=null;}
   const ctx=$('dashFeedChart');
@@ -1313,10 +1452,10 @@ function renderDash(){
 
 function renderDashProfitRank(){
   const box=$('dashProfitRank'); if(!box) return;
-  const thisMonth=new Date().toISOString().slice(0,7);
-  const rows=cages.map(c=>{
+  const thisMonth=today().slice(0,7);
+  const rows=activeCages().map(c=>{
     const sales=ships.filter(s=>s.cageId===c.id&&s.date.startsWith(thisMonth)).reduce((sum,s)=>sum+s.amount,0);
-    const cost=cageCost(c.id,thisMonth+'-01',thisMonth+'-31');
+    const cost=getCageCost(c.id,thisMonth+'-01',thisMonth+'-31').total;
     return {name:c.name, profit:sales-cost};
   }).sort((a,b)=>b.profit-a.profit).slice(0,5);
   const max=Math.max(...rows.map(r=>Math.abs(r.profit)),1);
@@ -1327,6 +1466,7 @@ function renderDashProfitRank(){
 }
 
 function quickRecord(cageId){showPage('record');setTimeout(()=>{$('recCage').value=cageId;loadExistingRecord();},100);}
+function openQuickRegisterMenu(){openModal('quickRegisterModal');}
 
 function getLast(arr, filterFn){
   return [...arr].filter(filterFn||(()=>true)).sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]||null;
@@ -1488,26 +1628,44 @@ function deleteShip(id){
 }
 function renderShipTable(){
   const tbody=$('shipTableBody');
+  const cardBox=$('shipCardList');
   const list=[...ships].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
-  tbody.innerHTML=list.length?list.map(s=>`<tr>
-    <td>${fmtDate(s.date)}</td>
-    <td>${getCage(s.cageId).name||'—'}</td>
-    <td>${cageCurrentSpecies(getCage(s.cageId),s.date).name||'—'}</td>
-    <td>${s.dest||'—'}</td>
-    <td>${s.count?fmtNum(s.count)+'尾':'—'}</td>
-    <td>${s.weight?s.weight+'kg':'—'}</td>
-    <td>${s.price?'¥'+fmtNum(s.price)+'/kg':'—'}</td>
-    <td style="font-weight:700">¥${fmtNum(s.amount)}</td>
-    <td>
-      <button class="btn-icon" onclick="openShipModal('${s.id}')" style="margin-right:4px">
-        <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
-      </button>
-      <button class="btn-icon del" onclick="deleteShip('${s.id}')">
-        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
-      </button>
-    </td>
-  </tr>`).join('')
-  :`<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--tx-m)">出荷記録がありません</td></tr>`;
+  const rows=list.map(s=>{
+    const cage=getCage(s.cageId);
+    const sp=cageCurrentSpecies(cage,s.date).name||'—';
+    const dest=shortText(s.dest||'—',10);
+    return`<tr>
+      <td>${fmtDate(s.date)}</td>
+      <td>${cage.name||'—'}</td>
+      <td>${sp}</td>
+      <td title="${s.dest||''}">${dest}</td>
+      <td>${s.count?fmtNum(s.count)+'尾':'—'}</td>
+      <td>${s.weight?s.weight+'kg':'—'}</td>
+      <td>${s.price?'¥'+fmtNum(s.price)+'/kg':'—'}</td>
+      <td style="font-weight:700" title="¥${fmtNum(s.amount)}">${fmtMoneyShort(s.amount)}</td>
+      <td><div class="cost-actions">
+        <button class="btn-icon" onclick="openShipModal('${s.id}')"><svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg></button>
+        <button class="btn-icon del" onclick="deleteShip('${s.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  if(tbody) tbody.innerHTML=list.length?rows:`<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--tx-m)">出荷記録がありません</td></tr>`;
+  if(cardBox) cardBox.innerHTML=list.length?list.map(s=>{
+    const cage=getCage(s.cageId);
+    const sp=cageCurrentSpecies(cage,s.date).name||'—';
+    return `<div class="ship-card">
+      <div class="ship-card-head">
+        <div><div class="ship-title">${fmtDate(s.date)}　${sp}</div><div class="ship-sub">${cage.name||'—'} ／ ${shortText(s.dest||'—',16)}</div></div>
+        <div class="cost-actions"><button class="btn-icon" onclick="openShipModal('${s.id}')">✎</button><button class="btn-icon del" onclick="deleteShip('${s.id}')">×</button></div>
+      </div>
+      <div class="ship-grid">
+        <div class="ship-cell"><div class="lbl">尾数</div><div class="val">${s.count?fmtNum(s.count)+'尾':'—'}</div></div>
+        <div class="ship-cell"><div class="lbl">重量</div><div class="val">${s.weight?s.weight+'kg':'—'}</div></div>
+        <div class="ship-cell"><div class="lbl">単価</div><div class="val">${s.price?'¥'+fmtNum(s.price)+'/kg':'—'}</div></div>
+        <div class="ship-cell"><div class="lbl">売上</div><div class="val" title="¥${fmtNum(s.amount)}" style="color:var(--ok)">${fmtMoneyShort(s.amount)}</div></div>
+      </div>
+    </div>`;
+  }).join(''):`<div class="empty-note">出荷記録がありません</div>`;
 }
 function renderSalesChart(){
   const months=[];
@@ -1529,19 +1687,30 @@ function renderSalesSummary(){
   const bySpecies={};
   ships.forEach(sh=>{const sp=cageCurrentSpecies(getCage(sh.cageId),sh.date).name||'不明';bySpecies[sp]=(bySpecies[sp]||0)+sh.amount;});
   const spRows=Object.entries(bySpecies).sort((a,b)=>b[1]-a[1])
-    .map(([n,v])=>`<div class="pl-breakdown-row"><span>${n}</span><span style="font-weight:600">¥${fmtNum(v)}</span></div>`).join('');
+    .map(([n,v])=>{ const pct=totalSales?Math.round(v/totalSales*100):0; return `<div class="sales-rank-row"><span>${n}</span><span>${fmtMoneyShort(v)}<em>（${pct}%）</em></span></div>`; }).join('');
   $('salesSummaryBox').innerHTML=`
     <div class="form-row3 keep-3" style="margin-bottom:14px">
-      <div class="kpi k-gold" style="margin:0"><div class="kpi-label">累計売上</div><div class="kpi-val" style="font-size:18px">¥${fmtNum(totalSales)}</div></div>
-      <div class="kpi k-aqua" style="margin:0"><div class="kpi-label">今月の売上</div><div class="kpi-val" style="font-size:18px">¥${fmtNum(monthlySales)}</div></div>
+      <div class="kpi k-gold" style="margin:0"><div class="kpi-label">累計売上</div><div class="kpi-val compact-money" title="¥${fmtNum(totalSales)}" style="font-size:18px">${fmtMoneyShort(totalSales)}</div></div>
+      <div class="kpi k-aqua" style="margin:0"><div class="kpi-label">今月の売上</div><div class="kpi-val compact-money" title="¥${fmtNum(monthlySales)}" style="font-size:18px">${fmtMoneyShort(monthlySales)}</div></div>
       <div class="kpi k-blue" style="margin:0"><div class="kpi-label">出荷件数</div><div class="kpi-val" style="font-size:18px">${ships.length}件</div></div>
     </div>
-    <div class="section-label">魚種別売上</div>
-    <div class="pl-breakdown">${spRows||'データなし'}</div>`;
+    <div class="section-label">魚種別売上ランキング</div>
+    <div class="sales-rank">${spRows||'<div class="empty-note">データなし</div>'}</div>`;
 }
 
 // ─── 原価 ─────────────────────────────────────────────────
-function renderCost(){renderCostTable();renderFeedInventory();}
+let curCostTab='cost';
+function renderCost(){showCostTab(curCostTab||'cost', true);}
+function showCostTab(tab, silent){
+  curCostTab=tab;
+  document.querySelectorAll('.subtab[data-cost-tab]').forEach(b=>b.classList.toggle('active',b.dataset.costTab===tab));
+  document.querySelectorAll('.cost-pane').forEach(p=>p.classList.remove('active'));
+  const pane=$('cost-pane-'+tab); if(pane) pane.classList.add('active');
+  if(tab==='cost') renderCostTable();
+  if(tab==='feed') renderFeedInventory();
+  if(tab==='history') renderCostHistory();
+}
+
 function openCostModal(id){
   const c=id?costs.find(x=>x.id===id):null;
   const lastCost=getLast(costs);
@@ -1561,7 +1730,7 @@ function renderCostItemSelect(selectedId){
   const sel=$('costItem');
   const base=activeCostItems();
   const selected=costItems.find(x=>x.id===selectedId);
-  if(selected && selected.active===false) base.push(selected);
+  if(selected && !base.some(x=>x.id===selected.id)) base.push(selected);
   const directs  =base.filter(x=>x.type==='direct');
   const indirects=base.filter(x=>x.type==='indirect');
   sel.innerHTML=
@@ -1585,6 +1754,7 @@ function saveCost(){
   if(!amount){toast('金額を入力してください');return;}
   if(!itemId){toast('費目を選択してください');return;}
   const item=costItems.find(x=>x.id===itemId);
+  if(isFeedCostItem(item)){toast('飼料費は「仕入」タブから登録してください');return;}
   const payload={id:$('costId').value||genId(),date:$('costDate').value,
     cageId:item?.type==='indirect'?null:($('costCage').value||null),
     itemId,amount,type:item?.type||'direct',note:$('costNote').value};
@@ -1596,36 +1766,62 @@ function saveCost(){
 }
 function deleteCost(id){
   confirmDlg('コストを削除','このコスト記録を削除しますか？','削除する',()=>{
-    costs=costs.filter(c=>c.id!==id);save(KEYS.costs,costs);renderCostTable();toast('削除しました');
+    costs=costs.filter(c=>c.id!==id);save(KEYS.costs,costs);renderCost();toast('削除しました');
   });
 }
 function renderCostTable(){
   const tbody=$('costTableBody');
-  const list=[...costs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
-  tbody.innerHTML=list.length?list.map(c=>{
-    const item=costItems.find(x=>x.id===c.itemId)||{name:'—'};
-    const cage=c.cageId?getCage(c.cageId).name:'共通';
-    return`<tr>
-      <td>${fmtDate(c.date)}</td>
-      <td>${cage}</td>
-      <td>${item.name}</td>
-      <td><span class="badge ${c.type==='direct'?'bg-aqua':'bg-gray'}">${c.type==='direct'?'直接費':'間接費'}</span></td>
-      <td style="font-weight:600">¥${fmtNum(c.amount)}</td>
-      <td style="font-size:12px;color:var(--tx-m)">${c.note||''}</td>
-      <td>
-        <button class="btn-icon" onclick="openCostModal('${c.id}')" style="margin-right:4px">
-          <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
-        </button>
-        <button class="btn-icon del" onclick="deleteCost('${c.id}')">
-          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
-        </button>
-      </td>
-    </tr>`;
-  }).join('')
-  :`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx-m)">コスト記録がありません</td></tr>`;
+  const cardBox=$('costCardList');
+  const list=[...costs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+  const rowHtml=list.length?list.map(c=>costRowHtml(c)).join(''):`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx-m)">コスト記録がありません</td></tr>`;
+  if(tbody) tbody.innerHTML=rowHtml;
+  if(cardBox) cardBox.innerHTML=list.length?list.map(c=>costCardHtml(c)).join(''):`<div class="empty-note">コスト記録がありません</div>`;
+}
+function costRowHtml(c){
+  const item=costItems.find(x=>x.id===c.itemId)||{name:'—'};
+  const cage=c.cageId?getCage(c.cageId).name:'共通';
+  return`<tr>
+    <td>${fmtDate(c.date)}</td><td>${cage}</td><td>${item.name}</td>
+    <td><span class="badge ${c.type==='direct'?'bg-aqua':'bg-gray'}">${c.type==='direct'?'直接費':'間接費'}</span></td>
+    <td style="font-weight:600">¥${fmtNum(c.amount)}</td>
+    <td style="font-size:12px;color:var(--tx-m)">${c.note||''}</td>
+    <td><div class="cost-actions">
+      <button class="btn-icon" onclick="openCostModal('${c.id}')"><svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg></button>
+      <button class="btn-icon del" onclick="deleteCost('${c.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg></button>
+    </div></td>
+  </tr>`;
+}
+function costCardHtml(c){
+  const item=costItems.find(x=>x.id===c.itemId)||{name:'—'};
+  const cage=c.cageId?getCage(c.cageId).name:'共通';
+  return `<div class="cost-mini-card">
+    <div class="cost-mini-head"><div><div class="cost-mini-title">${item.name}</div><div class="cost-mini-sub">${fmtDate(c.date)} ／ ${cage}</div></div><div class="cost-actions"><button class="btn-icon" onclick="openCostModal('${c.id}')">✎</button><button class="btn-icon del" onclick="deleteCost('${c.id}')">×</button></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="badge ${c.type==='direct'?'bg-aqua':'bg-gray'}">${c.type==='direct'?'直接費':'間接費'}</span><strong>¥${fmtNum(c.amount)}</strong></div>
+    ${c.note?`<div class="cost-mini-sub" style="margin-top:6px">${c.note}</div>`:''}
+  </div>`;
+}
+function renderCostHistory(){
+  const kind=$('costSearchKind')?.value||'cost';
+  const area=$('costHistoryArea'); if(!area) return;
+  if(kind==='feed'){
+    const fifo=calcFifo();
+    area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>仕入日</th><th>品名</th><th>仕入量</th><th>単価</th><th>残量</th><th>状態</th></tr></thead><tbody>${fifo.lots.map(l=>`<tr><td>${fmtDate(l.date)}</td><td>${l.name}</td><td>${l.qty.toFixed(1)}kg</td><td>¥${fmtNum(l.unitPrice)}/kg</td><td>${l.remaining.toFixed(1)}kg</td><td>${l.remaining<=0?'消費済':l.remaining<l.qty*.2?'残少':'在庫あり'}</td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">仕入記録がありません</td></tr>`}</tbody></table></div>`;
+    return;
+  }
+  const q=($('costSearchText')?.value||'').trim();
+  const cageId=$('costSearchCage')?.value||'';
+  const type=$('costSearchType')?.value||'';
+  const cageSel=$('costSearchCage');
+  if(cageSel && cageSel.options.length<=1){ cageSel.innerHTML='<option value="">すべて</option>'+activeCages().map(c=>`<option value="${c.id}">${c.name}</option>`).join('')+'<option value="__common">共通</option>'; cageSel.value=cageId; }
+  let list=[...costs].sort((a,b)=>b.date.localeCompare(a.date));
+  if(type) list=list.filter(c=>c.type===type);
+  if(cageId==='__common') list=list.filter(c=>!c.cageId); else if(cageId) list=list.filter(c=>c.cageId===cageId);
+  if(q) list=list.filter(c=>{const item=costItems.find(x=>x.id===c.itemId)||{};return (item.name||'').includes(q)||(c.note||'').includes(q);});
+  area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th><th></th></tr></thead><tbody>${list.length?list.map(c=>costRowHtml(c)).join(''):`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tx-m)">該当するコスト記録がありません</td></tr>`}</tbody></table></div>`;
 }
 function renderFeedInventory(){
   const fifo=calcFifo();
+  if(!$('feedStock')||!$('feedInvBody')) return;
   $('feedStock').innerHTML=`
     <div class="kpi k-aqua" style="margin:0"><div class="kpi-label">現在の在庫</div><div class="kpi-val" style="font-size:18px">${fifo.totalStock.toFixed(1)}<span style="font-size:13px;margin-left:2px">kg</span></div></div>
     <div class="kpi k-blue" style="margin:0"><div class="kpi-label">在庫金額</div><div class="kpi-val" style="font-size:18px">¥${fmtNum(Math.round(fifo.totalValue))}</div></div>`;
@@ -1651,11 +1847,11 @@ function saveFeed(){
   const qty=parseFloat($('feedQty').value)||0, unitPrice=parseFloat($('feedUnitPrice').value)||0;
   if(!qty||!unitPrice){toast('数量と単価を入力してください');return;}
   inventory.unshift({id:genId(),date:$('feedDate').value,name:$('feedName').value||'餌',qty,unitPrice,amount:Math.round(qty*unitPrice)});
-  save(KEYS.inventory,inventory);closeModal('feedModal');toast('仕入を登録しました');renderFeedInventory();
+  save(KEYS.inventory,inventory);closeModal('feedModal');toast('仕入を登録しました'); if(curPage==='cost') renderCost(); else renderFeedInventory();
 }
 function delFeedInv(id){
   confirmDlg('仕入記録を削除','この仕入記録を削除しますか？','削除する',()=>{
-    inventory=inventory.filter(x=>x.id!==id);save(KEYS.inventory,inventory);renderFeedInventory();toast('削除しました');
+    inventory=inventory.filter(x=>x.id!==id);save(KEYS.inventory,inventory); if(curPage==='cost') renderCost(); else renderFeedInventory();toast('削除しました');
   });
 }
 
@@ -1671,11 +1867,12 @@ function setPLPeriod(kind){
   if(kind==='prevMonth'){from=fmt(new Date(y,m-1,1));to=fmt(new Date(y,m,0));}
   if(kind==='thisYear'){from=fmt(new Date(y,0,1));to=fmt(new Date(y,11,31));}
   $('plFrom').value=from; $('plTo').value=to;
+  updatePLPeriodLabel(kind);
   renderPL(curPLTab);
 }
 function getAllocWeights(from,to){
   const rule=settings.allocRule||'feed';
-  const list=cages.map(c=>{
+  const list=activeCages().map(c=>{
     let weight=0;
     if(rule==='feed') weight=getFeedCost(c.id,from,to);
     else if(rule==='sales') weight=ships.filter(s=>s.cageId===c.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((a,s)=>a+s.amount,0);
@@ -1691,24 +1888,40 @@ function getTotalIndirect(from,to){
 function getAllocDetail(from,to){
   const totalInd=getTotalIndirect(from,to);
   const aw=getAllocWeights(from,to);
-  const n=cages.length||1;
+  const n=aw.list.length||1;
   return aw.list.map(x=>{
     const ratio=aw.total?x.weight/aw.total:1/n;
     return{cage:x.cage,weight:x.weight,ratio,amount:Math.round(totalInd*ratio)};
   });
+}
+function updatePLPeriodLabel(kind){
+  const el=$('plPeriodLabel'); if(!el) return;
+  const map={thisMonth:'今月',prevMonth:'前月',thisYear:'今年',all:'全期間'};
+  const from=$('plFrom')?.value, to=$('plTo')?.value;
+  el.textContent='期間：'+(map[kind] || (from&&to?`${from.replaceAll('-','/')}〜${to.replaceAll('-','/')}`:'任意期間'));
+}
+function renderPLCageRankSummary(from,to){
+  const el=$('plCageRankSummary'); if(!el) return;
+  const rows=activeCages().map(c=>{
+    const sales=ships.filter(s=>s.cageId===c.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((a,s)=>a+s.amount,0);
+    const cb=getCageCost(c.id,from,to);
+    return {c,sales,cost:cb.total,profit:sales-cb.total};
+  }).filter(r=>r.sales||r.cost).sort((a,b)=>b.profit-a.profit).slice(0,5);
+  el.innerHTML=`<div class="card" style="margin-top:14px"><div class="card-hd"><div class="card-hd-l">生簀別利益ランキング</div></div>
+    <div class="sales-rank">${rows.length?rows.map(r=>`<div class="sales-rank-row"><span>${r.c.name}</span><span style="color:${r.profit>=0?'var(--ok)':'var(--danger)'}" title="${r.profit<0?'-':''}¥${fmtNum(Math.abs(r.profit))}">${fmtMoneyShort(r.profit)}</span></div>`).join(''):'<div class="empty-note">データなし</div>'}</div></div>`;
 }
 function renderAllocDetailBox(targetId,from,to){
   const el=$(targetId); if(!el) return;
   const ruleName={feed:'飼料費比率',sales:'売上比率',count:'尾数比率'}[settings.allocRule||'feed'];
   const totalInd=getTotalIndirect(from,to);
   const rows=getAllocDetail(from,to).filter(r=>r.amount>0||r.weight>0);
-  el.innerHTML=`<div class="card" style="margin-top:14px">
-    <div class="card-hd"><div class="card-hd-l">共通費の配賦結果</div></div>
-    <div class="alert alert-info" style="margin-bottom:12px">配賦ルール：${ruleName}　共通費合計：¥${fmtNum(totalInd)}</div>
+  el.innerHTML=`<details class="card alloc-details" style="margin-top:14px">
+    <summary class="period-summary"><span>共通費の配賦結果を見る</span></summary>
+    <div class="alert alert-info" style="margin:12px 0">配賦ルール：${ruleName}　共通費合計：¥${fmtNum(totalInd)}</div>
     <div class="table-wrap"><table><thead><tr><th>生簀</th><th>配賦基準値</th><th>配賦率</th><th>配賦額</th></tr></thead><tbody>
       ${rows.map(r=>`<tr><td><strong>${r.cage.name}</strong></td><td>${fmtNum(Math.round(r.weight))}</td><td>${Math.round(r.ratio*100)}%</td><td style="font-weight:700">¥${fmtNum(r.amount)}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--tx-m)">配賦対象の共通費がありません</td></tr>'}
     </tbody></table></div>
-  </div>`;
+  </details>`;
 }
 function renderPL(tab){
   curPLTab=tab;
@@ -1731,14 +1944,14 @@ function renderPLSummary(from,to){
   const margin=totalSales?Math.round(profit/totalSales*100):null;
   $('plSummaryBox').innerHTML=`
     <div class="kpi-row">
-      <div class="kpi k-ok"><div class="kpi-label">売上合計</div><div class="kpi-val">¥${fmtNum(totalSales)}</div></div>
-      <div class="kpi k-danger"><div class="kpi-label">コスト合計</div><div class="kpi-val">¥${fmtNum(cb.total)}</div></div>
-      <div class="kpi ${profit>=0?'k-aqua':'k-danger'}"><div class="kpi-label">粗利益</div><div class="kpi-val">${profit<0?'-':''}¥${fmtNum(Math.abs(profit))}</div></div>
+      <div class="kpi k-ok"><div class="kpi-label">売上合計</div><div class="kpi-val compact-money" title="¥${fmtNum(totalSales)}">${fmtMoneyShort(totalSales)}</div></div>
+      <div class="kpi k-danger"><div class="kpi-label">コスト合計</div><div class="kpi-val compact-money" title="¥${fmtNum(cb.total)}">${fmtMoneyShort(cb.total)}</div></div>
+      <div class="kpi ${profit>=0?'k-aqua':'k-danger'}"><div class="kpi-label">粗利益</div><div class="kpi-val compact-money" title="${profit<0?'-':''}¥${fmtNum(Math.abs(profit))}">${fmtMoneyShort(profit)}</div></div>
       <div class="kpi ${margin!==null&&margin>=0?'k-gold':'k-danger'}"><div class="kpi-label">粗利益率</div><div class="kpi-val">${margin!==null?margin+'%':'—'}</div></div>
     </div>
     <div class="card" style="margin-top:0">
       <div class="card-hd"><div class="card-hd-l">原価構成</div></div>
-      ${[['飼料費（FIFO）',cb.feedFifo],['直接費（その他）',cb.direct],['減耗費',cb.wastage],['間接費配賦',cb.indirect]]
+      ${[['飼料費（FIFO）',cb.feedFifo],['直接費（その他）',cb.direct],['間接費配賦',cb.indirect]]
         .filter(r=>r[1]>0).map(([n,v])=>`
         <div style="margin-bottom:10px">
           <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
@@ -1748,13 +1961,15 @@ function renderPLSummary(from,to){
           <div class="alloc-bar"><div class="alloc-fill" style="width:${cb.total?Math.round(v/cb.total*100):0}%"></div></div>
         </div>`).join('')}
     </div>
+    <div id="plCageRankSummary"></div>
     <div id="plAllocDetailBox"></div>`;
+  renderPLCageRankSummary(from,to);
   renderAllocDetailBox('plAllocDetailBox',from,to);
 }
 function makePLCard(label,sublabel,sales,cb){
   const profit=sales-cb.total, margin=sales?Math.round(profit/sales*100):null;
   const pc=profit>=0?'var(--ok)':'var(--danger)';
-  const rows=[['飼料費',cb.feedFifo],['直接費',cb.direct],['減耗費',cb.wastage],['間接費配賦',cb.indirect]]
+  const rows=[['飼料費',cb.feedFifo],['直接費',cb.direct],['間接費配賦',cb.indirect]]
     .filter(r=>r[1]>0).map(([n,v])=>`<div class="pl-breakdown-row"><span>${n}</span><span>¥${fmtNum(v)}</span></div>`).join('');
   return`<div class="pl-card">
     <div class="pl-card-hd">
@@ -1762,9 +1977,9 @@ function makePLCard(label,sublabel,sales,cb){
       <div><div style="font-weight:700;font-size:14px">${label}</div><div style="font-size:11px;color:var(--tx-m)">${sublabel}</div></div>
     </div>
     <div class="pl-metrics">
-      <div class="pl-metric"><div class="pl-metric-label">売上</div><div class="pl-metric-val" style="color:var(--ok)">¥${fmtNum(sales)}</div></div>
-      <div class="pl-metric"><div class="pl-metric-label">コスト</div><div class="pl-metric-val" style="color:var(--danger)">¥${fmtNum(cb.total)}</div></div>
-      <div class="pl-metric"><div class="pl-metric-label">粗利${margin!==null?` (${margin}%)`:''}</div><div class="pl-metric-val" style="color:${pc}">${profit<0?'-':''}¥${fmtNum(Math.abs(profit))}</div></div>
+      <div class="pl-metric"><div class="pl-metric-label">売上</div><div class="pl-metric-val" title="¥${fmtNum(sales)}" style="color:var(--ok)">${fmtMoneyShort(sales)}</div></div>
+      <div class="pl-metric"><div class="pl-metric-label">コスト</div><div class="pl-metric-val" title="¥${fmtNum(cb.total)}" style="color:var(--danger)">${fmtMoneyShort(cb.total)}</div></div>
+      <div class="pl-metric"><div class="pl-metric-label">粗利${margin!==null?` (${margin}%)`:''}</div><div class="pl-metric-val" title="${profit<0?'-':''}¥${fmtNum(Math.abs(profit))}" style="color:${pc}">${fmtMoneyShort(profit)}</div></div>
     </div>
     ${rows?`<details><summary style="font-size:12px;color:var(--tx-m);cursor:pointer;padding:4px 0">▸ 内訳を表示</summary><div class="pl-breakdown" style="margin-top:6px">${rows}</div></details>`:''}
   </div>`;
@@ -1836,7 +2051,6 @@ function renderPLStructure(from,to){
   const pieData=[
     {n:'飼料費（FIFO）',v:cb.feedFifo,c:'#3AB5A0'},
     {n:'直接費（その他）',v:cb.direct,c:'#2B7BB9'},
-    {n:'減耗費',v:cb.wastage,c:'#E67E22'},
     {n:'間接費配賦',v:cb.indirect,c:'#C9962A'},
   ].filter(x=>x.v>0);
   const ctx=$('plPieChart');
@@ -1969,11 +2183,11 @@ function toggleCageActive(id){
   save(KEYS.cages,cages); renderCageMgr(); toast(c.active?'有効化しました':'無効化しました');
 }
 
-// 初期登録
+// 飼育開始登録
 function ensureInitialCostItem(){
-  let item=costItems.find(x=>x.name==='初期登録原価');
+  let item=costItems.find(x=>x.name==='飼育開始登録原価');
   if(!item){
-    item={id:'ci_initial',name:'初期登録原価',type:'direct',builtin:true,active:true};
+    item={id:'ci_initial',name:'飼育開始登録原価',type:'direct',builtin:true,active:true};
     costItems.push(item); save(KEYS.costItems,costItems);
   }
   return item;
@@ -2004,14 +2218,14 @@ function saveInitialBulk(){
     if(!c.startDate) c.startDate=d;
     let cost=costs.find(x=>x.isInitial && x.cageId===c.id);
     if(amount>0){
-      const payload={id:cost?.id||genId(),date:d,cageId:c.id,itemId:item.id,amount,type:'direct',note:memo||'初期登録原価',isInitial:true};
+      const payload={id:cost?.id||genId(),date:d,cageId:c.id,itemId:item.id,amount,type:'direct',note:memo||'飼育開始登録原価',isInitial:true};
       if(cost) Object.assign(cost,payload); else costs.unshift(payload);
     }else if(cost){
       costs=costs.filter(x=>x.id!==cost.id);
     }
   });
   save(KEYS.cages,cages); save(KEYS.costs,costs);
-  addLog('初期登録',`${list.length}生簀の初期原価を保存`);
+  addLog('飼育開始登録',`${list.length}生簀の初期原価を保存`);
   toast('初期原価を保存しました');
   renderInitialSet(); renderCageMgr();
 }
@@ -2098,7 +2312,7 @@ function addUnit(){
 }
 function deleteUnit(i){settings.units=(settings.units||[]).filter((_,idx)=>idx!==i);save(KEYS.settings,settings);renderUnitsSet();}
 
-// CSV
+// Excel(CSV)
 function exportCSV(type){
   const esc=v=>v==null?'':String(v).replace(/"/g,'""');
   const q=v=>`"${esc(v)}"`;
@@ -2128,24 +2342,39 @@ function exportCSV(type){
   }
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
-  toast('CSVを出力しました');
+  toast('Excel(CSV)を出力しました');
 }
 
 // バックアップ
+function fullBackupData(){
+  return {
+    version:24,
+    exportedAt:new Date().toISOString(),
+    cages,species,records,ships,costs,inventory,costItems,settings,oplog
+  };
+}
+function applyBackupData(d){
+  cages=d.cages||[];species=d.species||defaultSpecies();records=d.records||[];
+  ships=d.ships||[];costs=d.costs||[];inventory=d.inventory||[];
+  costItems=d.costItems||defaultCostItems();settings=d.settings||defaultSettings();oplog=d.oplog||oplog||[];
+  save(KEYS.cages,cages);save(KEYS.species,species);save(KEYS.records,records);
+  save(KEYS.ships,ships);save(KEYS.costs,costs);save(KEYS.inventory,inventory);
+  save(KEYS.costItems,costItems);save(KEYS.settings,settings);save(KEYS.oplog,oplog);
+}
 function renderBackup(){
   const saved=JSON.parse(localStorage.getItem('aq_backups')||'[]');
   $('backupHistBody').innerHTML=saved.map((b,i)=>`<tr>
-    <td style="font-size:12px">${new Date(b.savedAt).toLocaleString('ja-JP')}</td>
-    <td style="font-size:12px">${b.cages.length}生簀 / ${b.records.length}記録 / ${b.costs.length}コスト</td>
+    <td style="font-size:12px">${new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP')}</td>
+    <td style="font-size:12px">${(b.cages||[]).length}生簀 / ${(b.records||[]).length}記録 / ${(b.ships||[]).length}出荷 / ${(b.costs||[]).length}コスト</td>
     <td><button class="btn btn-ghost btn-xs" onclick="restoreBackup(${i})">復元</button></td>
   </tr>`).join('')||'<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--tx-m)">履歴なし</td></tr>';
 }
 function exportJSON(){
-  const data={version:11,exportedAt:new Date().toISOString(),cages,species,records,ships,costs,inventory,costItems,settings};
+  const data=fullBackupData();
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`akamatsu_${today()}.json`;a.click();
   const saved=JSON.parse(localStorage.getItem('aq_backups')||'[]');
-  saved.unshift({savedAt:new Date().toISOString(),cages,records,costs});
+  saved.unshift({...data,savedAt:new Date().toISOString()});
   if(saved.length>10)saved.length=10;
   localStorage.setItem('aq_backups',JSON.stringify(saved));
   toast('バックアップを保存しました');renderBackup();addLog('バックアップ','JSONエクスポート');
@@ -2156,11 +2385,8 @@ function importJSON(e){
   reader.onload=ev=>{
     try{
       const d=JSON.parse(ev.target.result);
-      confirmDlg('バックアップを復元',`生簀${(d.cages||[]).length}件・記録${(d.records||[]).length}件を読み込みます。現在のデータは上書きされます。`,'復元する',()=>{
-        cages=d.cages||[];species=d.species||defaultSpecies();records=d.records||[];
-        ships=d.ships||[];costs=d.costs||[];inventory=d.inventory||[];
-        costItems=d.costItems||defaultCostItems();settings=d.settings||defaultSettings();
-        Object.entries(KEYS).forEach(([k,v])=>{if(eval(k)!==undefined)save(v,eval(k));});
+      confirmDlg('バックアップを復元',`生簀${(d.cages||[]).length}件・記録${(d.records||[]).length}件・出荷${(d.ships||[]).length}件を読み込みます。現在のデータは上書きされます。`,'復元する',()=>{
+        applyBackupData(d);
         toast('データを復元しました');addLog('インポート','JSON復元');showPage('dash');
       });
     }catch{toast('ファイルの読み込みに失敗しました');}
@@ -2169,11 +2395,10 @@ function importJSON(e){
 }
 function restoreBackup(i){
   const saved=JSON.parse(localStorage.getItem('aq_backups')||'[]');const b=saved[i];if(!b)return;
-  confirmDlg('バックアップを復元',`${new Date(b.savedAt).toLocaleString('ja-JP')} のバックアップを復元しますか？`,'復元する',()=>{
-    if(b.cages){cages=b.cages;save(KEYS.cages,cages);}
-    if(b.records){records=b.records;save(KEYS.records,records);}
-    if(b.costs){costs=b.costs;save(KEYS.costs,costs);}
-    toast('復元しました');addLog('バックアップ復元',new Date(b.savedAt).toLocaleString());
+  confirmDlg('バックアップを復元',`${new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP')} のバックアップを復元しますか？`,'復元する',()=>{
+    applyBackupData(b);
+    toast('復元しました');addLog('バックアップ復元',new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP'));
+    showPage('dash');
   });
 }
 
