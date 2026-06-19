@@ -447,7 +447,7 @@ tbody tr:hover td{background:var(--surface2);}
         <button class="btn btn-primary btn-sm" onclick="showPage('record')">記録入力</button>
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>生簀</th><th>魚種</th><th>在池尾数</th><th>給餌</th><th>死亡</th><th>水温</th><th></th></tr></thead>
+        <table><thead><tr><th>生簀</th><th>魚種</th><th>現在尾数</th><th>給餌</th><th>死亡</th><th>水温</th><th></th></tr></thead>
         <tbody id="dashCageTable"></tbody></table>
       </div>
     </div>
@@ -1190,7 +1190,7 @@ function renderDash(){
       <div class="kpi-sub">${todayShips.length}件</div>
     </div>
     <div class="kpi k-ok">
-      <div class="kpi-label">在池尾数</div>
+      <div class="kpi-label">現在尾数</div>
       <div class="kpi-val">${fmtNum(totalLiving)}<span style="font-size:14px;font-weight:400;margin-left:3px">尾</span></div>
       <div class="kpi-sub">${avgTemp?`平均水温 ${avgTemp}℃`:'水温未記録'}</div>
     </div>`;
@@ -2004,7 +2004,7 @@ function renderAllocSet(){
   renderAllocDetailBox('allocPreviewBox',null,null);
 }
 function updateAllocDesc(){
-  const labels={feed:'飼料費比率：各生簀の飼料費の割合に応じて配賦します',sales:'売上比率：各生簀の売上金額の割合に応じて配賦します',count:'尾数比率：現在の在池尾数の割合に応じて配賦します'};
+  const labels={feed:'飼料費比率：各生簀の飼料費の割合に応じて配賦します',sales:'売上比率：各生簀の売上金額の割合に応じて配賦します',count:'尾数比率：現在の残存尾数の割合に応じて配賦します'};
   $('allocDesc').textContent=labels[$('allocRule').value]||'';
 }
 function saveAllocRule(){settings.allocRule=$('allocRule').value;save(KEYS.settings,settings);renderAllocSet();toast('配賦ルールを保存しました');}
