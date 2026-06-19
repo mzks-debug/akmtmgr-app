@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-<title>赤松水産 養殖管理 v26</title>
+<title>赤松水産 養殖管理 v27</title>
 <script>/*!
  * Chart.js v4.5.1
  * https://www.chartjs.org
@@ -739,9 +739,13 @@ tbody tr:hover td{background:var(--surface2);}
     </div>
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
       <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>開始日</label>
-        <input type="date" id="plFrom" onchange="renderPL(curPLTab);updatePLPeriodLabel()"></div>
+        <input type="date" id="plFrom" onchange="updatePLPeriodLabel();invalidatePLCache();renderPL(curPLTab)"></div>
       <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>終了日</label>
-        <input type="date" id="plTo" onchange="renderPL(curPLTab);updatePLPeriodLabel()"></div>
+        <input type="date" id="plTo" onchange="updatePLPeriodLabel();invalidatePLCache();renderPL(curPLTab)"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="refreshPLAggregate()">集計を更新</button>
+      <span id="plCalcStatus" style="font-size:12px;color:var(--tx-m)">必要な時だけ集計します</span>
     </div>
   </details>
   <div class="pl-menu-card card">
@@ -762,6 +766,11 @@ tbody tr:hover td{background:var(--surface2);}
     <button class="pl-tab"        data-tab="margin"    onclick="renderPL('margin')">粗利率分析</button>
     <button class="pl-tab"        data-tab="trend"     onclick="renderPL('trend')">月別推移</button>
     <button class="pl-tab"        data-tab="structure" onclick="renderPL('structure')">原価構成比</button>
+  </div>
+  <div id="plLazyNotice" class="card" style="display:none;margin-top:12px">
+    <div style="font-weight:700;margin-bottom:6px">損益集計は未更新です</div>
+    <div style="font-size:13px;color:var(--tx-m);line-height:1.7">PWAアプリ版での速度を優先するため、損益は自動集計せず、必要な時にだけ計算します。</div>
+    <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="refreshPLAggregate()">集計を更新</button>
   </div>
   <div id="pl-summary"   class="pl-pane"><div id="plSummaryBox"></div></div>
   <div id="pl-cage"      class="pl-pane" style="display:none"><div id="plCageBox"></div></div>
@@ -1185,7 +1194,7 @@ const KEYS={
   costItems:'aq_costItems', settings:'aq_settings', oplog:'aq_oplog', summary:'aq_summary'
 };
 const load = k => { try{ return JSON.parse(localStorage.getItem(k))||null; }catch{ return null; } };
-const save = (k,v) => { localStorage.setItem(k, JSON.stringify(v)); invalidatePerfCaches(); };
+const save = (k,v) => { localStorage.setItem(k, JSON.stringify(v)); invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache(); };
 
 // ─── デフォルト ───────────────────────────────────────────
 function defaultSpecies(){
@@ -1279,7 +1288,7 @@ function showPage(name){
   if(name==='record')   initRecord();
   if(name==='ship')     renderShip();
   if(name==='cost')     renderCost();
-  if(name==='pl')       { if(!$('plFrom').value && !$('plTo').value) setPLPeriod('thisMonth'); else renderPL(curPLTab); }
+  if(name==='pl')       { if(!$('plFrom').value && !$('plTo').value) setPLPeriod('thisMonth', true); renderPL(curPLTab); }
   if(name==='settings') renderSettings(curSetTab);
 }
 
@@ -1881,7 +1890,14 @@ function delFeedInv(id){
 
 // ─── 損益 ─────────────────────────────────────────────────
 let plChartInst=null, plPieInst=null;
-function setPLPeriod(kind){
+let plDirty=true, plLastCalcKey='';
+function currentPLKey(){return (($('plFrom')?.value||'')+'|'+($('plTo')?.value||'')+'|'+dataSig());}
+function invalidatePLCache(){plDirty=true; const st=$('plCalcStatus'); if(st) st.textContent='集計未更新';}
+function refreshPLAggregate(){
+  const st=$('plCalcStatus'); if(st) st.textContent='集計中…';
+  setTimeout(()=>{ plDirty=false; plLastCalcKey=currentPLKey(); renderPL(curPLTab,true); if(st) st.textContent='集計済み'; },30);
+}
+function setPLPeriod(kind, silent=false){
   const now=new Date();
   const y=now.getFullYear(), m=now.getMonth();
   const pad=n=>String(n).padStart(2,'0');
@@ -1892,7 +1908,8 @@ function setPLPeriod(kind){
   if(kind==='thisYear'){from=fmt(new Date(y,0,1));to=fmt(new Date(y,11,31));}
   $('plFrom').value=from; $('plTo').value=to;
   updatePLPeriodLabel(kind);
-  renderPL(curPLTab);
+  invalidatePLCache();
+  if(!silent) renderPL(curPLTab);
 }
 function getAllocWeights(from,to){
   const rule=settings.allocRule||'feed';
@@ -1951,12 +1968,21 @@ function renderAllocDetailBox(targetId,from,to){
     </tbody></table></div>
   </details>`;
 }
-function renderPL(tab){
+function renderPL(tab, force=false){
   curPLTab=tab;
   document.querySelectorAll('.pl-tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));
   const plSel=$('plMenuSelect'); if(plSel && plSel.value!==tab) plSel.value=tab;
   document.querySelectorAll('.pl-pane').forEach(el=>el.style.display='none');
   const pane=$('pl-'+tab); if(pane) pane.style.display='';
+  const notice=$('plLazyNotice');
+  const key=currentPLKey();
+  if((plDirty || plLastCalcKey!==key) && !force){
+    if(notice) notice.style.display='';
+    if(pane) pane.style.display='none';
+    const st=$('plCalcStatus'); if(st) st.textContent='集計未更新';
+    return;
+  }
+  if(notice) notice.style.display='none';
   const from=$('plFrom')?.value||null, to=$('plTo')?.value||null;
   if(tab==='summary')   renderPLSummary(from,to);
   if(tab==='cage')      renderPLCage(from,to);
@@ -1990,9 +2016,8 @@ function renderPLSummary(from,to){
         </div>`).join('')}
     </div>
     <div id="plCageRankSummary"></div>
-    <div id="plAllocDetailBox"></div>`;
+    <div id="plAllocDetailBox"><button class="btn btn-ghost btn-sm" onclick="renderAllocDetailBox('plAllocDetailBox', $('plFrom')?.value||null, $('plTo')?.value||null)">共通費配賦を見る</button></div>`;
   renderPLCageRankSummary(from,to);
-  renderAllocDetailBox('plAllocDetailBox',from,to);
 }
 function makePLCard(label,sublabel,sales,cb){
   const profit=sales-cb.total, margin=sales?Math.round(profit/sales*100):null;
@@ -2129,26 +2154,23 @@ function renderHistory(){
   const thead=$('histHead'), tbody=$('histBody');
   if(type==='feed'){
     thead.innerHTML='<tr><th>日付</th><th>生簀</th><th>給餌</th><th>死亡</th><th>水温</th><th>作業</th></tr>';
-    const allRecs=[...records].sort((a,b)=>b.date.localeCompare(a.date));
-    const recs=allRecs.slice(0,settingsHistoryLimit);
+    const recs=[...records].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,settingsHistoryLimit);
     tbody.innerHTML=recs.map(r=>`<tr>
       <td>${r.date}</td><td>${getCage(r.cageId).name||'—'}</td>
       <td>${r.feed||'—'}kg</td><td>${r.dead||0}尾</td><td>${r.temp||'—'}℃</td>
       <td style="font-size:12px">${r.workCat?`[${r.workCat}] `:''} ${r.workNote||''}</td>
-    </tr>`).join('')+(allRecs.length>recs.length?`<tr><td colspan="6"><button class="btn btn-ghost" style="width:100%" onclick="showMoreSettingsHistory()">さらに表示（${recs.length}/${allRecs.length}件）</button></td></tr>`:'')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
+    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   } else if(type==='ship'){
     thead.innerHTML='<tr><th>日付</th><th>生簀</th><th>出荷先</th><th>尾数</th><th>重量</th><th>金額</th></tr>';
-    const allShips=[...ships].sort((a,b)=>b.date.localeCompare(a.date));
-    const list=allShips.slice(0,settingsHistoryLimit);
+    const list=[...ships].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,settingsHistoryLimit);
     tbody.innerHTML=list.map(s=>`<tr>
       <td>${s.date}</td><td>${getCage(s.cageId).name||'—'}</td>
       <td>${s.dest||'—'}</td><td>${s.count?fmtNum(s.count)+'尾':'—'}</td>
       <td>${s.weight?s.weight+'kg':'—'}</td><td style="font-weight:600">¥${fmtNum(s.amount)}</td>
-    </tr>`).join('')+(allShips.length>list.length?`<tr><td colspan="6"><button class="btn btn-ghost" style="width:100%" onclick="showMoreSettingsHistory()">さらに表示（${list.length}/${allShips.length}件）</button></td></tr>`:'')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
+    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   } else {
     thead.innerHTML='<tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th></tr>';
-    const allCosts=[...costs].sort((a,b)=>b.date.localeCompare(a.date));
-    const list=allCosts.slice(0,settingsHistoryLimit);
+    const list=[...costs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,settingsHistoryLimit);
     tbody.innerHTML=list.map(c=>{
       const item=costItems.find(x=>x.id===c.itemId)||{name:'—'};
       return`<tr>
@@ -2158,7 +2180,7 @@ function renderHistory(){
         <td style="font-weight:600">¥${fmtNum(c.amount)}</td>
         <td style="font-size:12px">${c.note||''}</td>
       </tr>`;
-    }).join('')+(allCosts.length>list.length?`<tr><td colspan="6"><button class="btn btn-ghost" style="width:100%" onclick="showMoreSettingsHistory()">さらに表示（${list.length}/${allCosts.length}件）</button></td></tr>`:'')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
+    }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   }
 }
 

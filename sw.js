@@ -1,4 +1,4 @@
-const CACHE_NAME = 'akamatsu-aqua-v26';
+const CACHE_NAME = 'akamatsu-aqua-v27';
 const ASSETS = [
   './',
   './index.html',
