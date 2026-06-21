@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-<title>赤松水産 養殖管理 v27.3</title>
+<title>赤松水産 養殖管理 v28.2</title>
 <script>/*!
  * Chart.js v4.5.1
  * https://www.chartjs.org
@@ -591,10 +591,731 @@ tbody tr:hover td{background:var(--surface2);}
 .fcr-good{color:var(--ok)!important}.fcr-warn{color:var(--warn)!important}.fcr-bad{color:var(--danger)!important}
 .measure-note{font-size:11px;color:var(--tx-m);line-height:1.6;margin:6px 0 12px}
 .dash-cage-metric.fcr-metric{background:linear-gradient(180deg,rgba(58,181,160,.10),rgba(58,181,160,.03));border-color:rgba(58,181,160,.18)}
+.transfer-help{font-size:12px;color:var(--tx-m);line-height:1.7;margin:8px 0 14px}.transfer-chip{display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(58,181,160,.12);color:var(--aqua);font-weight:700;font-size:12px}
+
+
+/* v28 漁場・餌種類別管理 */
+.v28-filter-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px}
+.v28-filter-row .form-group{margin:0;min-width:180px}
+.feed-lines{display:grid;gap:8px;margin-bottom:12px}
+.feed-line{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(100px,.7fr);gap:8px;align-items:end}
+.feed-line .form-group{margin:0}
+.feed-subnote{font-size:11px;color:var(--tx-m);line-height:1.6;margin:-4px 0 10px}
+.master-row-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+@media(max-width:720px){
+  .feed-line{grid-template-columns:1fr 110px}
+  .v28-filter-row .form-group{min-width:0;width:100%}
+}
+
+
+/* v28.0.1 スマホ横幅調整 */
+*{box-sizing:border-box}
+html,body,#app,.app-main,.page{max-width:100%;overflow-x:hidden}
+.card,.modal-card,.table-wrap,.record-layout,.record-page,.form-row2,.form-row3,.g2,.g3{max-width:100%}
+input,select,textarea{max-width:100%;min-width:0}
+.record-page .card,.record-layout .card{overflow:hidden}
+.feed-lines{width:100%;max-width:100%}
+.feed-line{grid-template-columns:minmax(0,1fr) 96px;gap:8px;width:100%;max-width:100%}
+.feed-line select,.feed-line input{width:100%;min-width:0}
+@media(max-width:720px){
+  .record-layout,.record-page .record-layout{grid-template-columns:1fr!important;width:100%}
+  .feed-line{grid-template-columns:minmax(0,1fr) 92px!important}
+  .feed-line .form-group label{font-size:12px}
+  .record-page .form-row2,.record-page .form-row3{grid-template-columns:1fr 1fr!important}
+  #recDate,#recCage{width:100%}
+  .card-hd{align-items:flex-start}
+  .card-hd .btn,.card-hd button{max-width:180px;white-space:normal}
+}
+
+
+/* v28.0.2 スマホ日次記録 完全1カラム化 */
+@media(max-width:720px){
+  body{overflow-x:hidden!important}
+  .app-main,.main,.page,.content,.record-page{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  .record-page .card,
+  #page-record .card,
+  .record-layout .card{
+    width:100%!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    padding-left:16px!important;
+    padding-right:16px!important;
+  }
+
+  /* 日次記録カードのヘッダー */
+  #page-record .card-hd,
+  .record-page .card-hd{
+    display:block!important;
+  }
+  #page-record .card-hd .card-hd-l,
+  .record-page .card-hd .card-hd-l{
+    margin-bottom:10px!important;
+  }
+  #page-record .card-hd button,
+  .record-page .card-hd button,
+  #page-record .card-hd .btn,
+  .record-page .card-hd .btn{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    white-space:normal!important;
+    text-align:center!important;
+  }
+
+  /* 入力行はスマホでは全部縦積み */
+  #page-record .form-row2,
+  #page-record .form-row3,
+  #page-record .g2,
+  #page-record .g3,
+  .record-page .form-row2,
+  .record-page .form-row3,
+  .record-page .g2,
+  .record-page .g3{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+
+  #page-record .form-group,
+  .record-page .form-group{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-bottom:0!important;
+  }
+
+  #page-record input,
+  #page-record select,
+  #page-record textarea,
+  .record-page input,
+  .record-page select,
+  .record-page textarea{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  /* 餌明細は餌種類・使用量を完全に縦配置 */
+  #page-record .feed-lines,
+  .record-page .feed-lines{
+    display:grid!important;
+    gap:14px!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+  #page-record .feed-line,
+  .record-page .feed-line{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    width:100%!important;
+    max-width:100%!important;
+    padding:10px!important;
+    border:1px solid var(--border-l)!important;
+    border-radius:12px!important;
+    background:var(--surface2)!important;
+  }
+  #page-record .feed-line .form-group,
+  .record-page .feed-line .form-group{
+    width:100%!important;
+    max-width:100%!important;
+  }
+  #page-record .feed-line select,
+  #page-record .feed-line input,
+  .record-page .feed-line select,
+  .record-page .feed-line input{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    background:var(--surface)!important;
+  }
+
+  /* 説明文もはみ出さない */
+  #page-record .measure-note,
+  #page-record .feed-subnote,
+  .record-page .measure-note,
+  .record-page .feed-subnote{
+    overflow-wrap:anywhere!important;
+    word-break:break-word!important;
+    white-space:normal!important;
+  }
+
+  /* 下部ボタン */
+  #page-record .form-actions,
+  .record-page .form-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:10px!important;
+    width:100%!important;
+  }
+  #page-record .form-actions .btn,
+  .record-page .form-actions .btn{
+    width:100%!important;
+    min-width:0!important;
+  }
+}
+
+
+/* v28.0.3 日次記録UI再調整 */
+.feed-add-btn{
+  width:100%;
+  margin:4px 0 14px;
+  justify-content:center;
+}
+@media(max-width:720px){
+  /* 前回の日次記録をコピーは右上配置に戻す */
+  #page-record .card-hd,
+  .record-page .card-hd{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+  }
+  #page-record .card-hd .card-hd-l,
+  .record-page .card-hd .card-hd-l{
+    margin-bottom:0!important;
+    min-width:0!important;
+  }
+  #page-record .card-hd button,
+  .record-page .card-hd button,
+  #page-record .card-hd .btn,
+  .record-page .card-hd .btn{
+    width:auto!important;
+    max-width:170px!important;
+    min-width:132px!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+    flex:0 0 auto!important;
+  }
+
+  /* 餌明細は横並び。1行目だけ表示、追加ボタンで増やす */
+  #page-record .feed-lines,
+  .record-page .feed-lines{
+    gap:8px!important;
+    margin-bottom:8px!important;
+  }
+  #page-record .feed-line,
+  .record-page .feed-line{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 92px!important;
+    gap:8px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    align-items:end!important;
+  }
+  #page-record .feed-line:not(.active),
+  .record-page .feed-line:not(.active){
+    display:none!important;
+  }
+  #page-record .feed-line .form-group,
+  .record-page .feed-line .form-group{
+    margin-bottom:0!important;
+  }
+  #page-record .feed-line label,
+  .record-page .feed-line label{
+    font-size:12px!important;
+  }
+  #page-record .feed-line select,
+  #page-record .feed-line input,
+  .record-page .feed-line select,
+  .record-page .feed-line input{
+    height:46px!important;
+    padding:8px 10px!important;
+    background:var(--surface)!important;
+  }
+  .feed-add-btn{
+    min-height:40px!important;
+    font-size:13px!important;
+    margin:2px 0 12px!important;
+  }
+
+  /* 保存ボタンは詳細入力とかぶらないように固定解除 */
+  #page-record .form-actions,
+  .record-page .form-actions{
+    position:static!important;
+    bottom:auto!important;
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:10px!important;
+    padding:14px 0 4px!important;
+    margin-top:4px!important;
+    background:transparent!important;
+    border-top:1px solid var(--border)!important;
+  }
+}
+
+
+/* v28.0.5 保存通知を画面上に明示表示 */
+.save-toast{
+  position:fixed;
+  left:50%;
+  bottom:calc(92px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(18px);
+  z-index:99999;
+  background:rgba(20,53,81,.96);
+  color:#fff;
+  padding:13px 20px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:15px;
+  box-shadow:0 12px 32px rgba(0,0,0,.28);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+  max-width:calc(100vw - 32px);
+  text-align:center;
+  white-space:nowrap;
+}
+.save-toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+@media(min-width:721px){
+  .save-toast{bottom:32px}
+}
+
+/* Undo（元に戻す）トースト */
+.undo-toast{
+  position:fixed;
+  left:50%;
+  bottom:calc(92px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(18px);
+  z-index:100000;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background:rgba(20,53,81,.97);
+  color:#fff;
+  padding:11px 12px 11px 20px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:0 12px 32px rgba(0,0,0,.28);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+  max-width:calc(100vw - 32px);
+}
+.undo-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+.undo-toast-msg{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.undo-toast-btn{
+  flex-shrink:0;
+  background:var(--aqua);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:7px 16px;
+  font-weight:800;
+  font-size:13px;
+  cursor:pointer;
+}
+.undo-toast-btn:active{ background:var(--aqua-d); }
+@media(min-width:721px){
+  .undo-toast{bottom:32px}
+}
+
+/* LocalStorage 容量警告バナー */
+.storage-banner{
+  position:fixed;
+  left:50%;
+  top:calc(8px + env(safe-area-inset-top));
+  transform:translateX(-50%) translateY(-12px);
+  z-index:100001;
+  display:none;
+  align-items:flex-start;
+  gap:10px;
+  max-width:min(640px, calc(100vw - 24px));
+  background:var(--warn-l);
+  color:var(--tx);
+  border:1px solid var(--warn);
+  border-left:4px solid var(--warn);
+  border-radius:var(--r-md);
+  padding:11px 12px 11px 14px;
+  font-size:13px;
+  line-height:1.5;
+  box-shadow:var(--sh-md);
+  opacity:0;
+  transition:opacity .2s ease, transform .2s ease;
+}
+.storage-banner.show{ display:flex; opacity:1; transform:translateX(-50%) translateY(0); }
+.storage-banner-icon{ color:var(--warn); font-size:16px; line-height:1.4; flex-shrink:0; }
+.storage-banner-msg{ flex:1; }
+.storage-banner-close{
+  flex-shrink:0;
+  background:transparent;
+  border:none;
+  color:var(--tx-s);
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+  padding:0 2px;
+}
+
+/* ログイン画面 */
+.login-overlay{
+  position:fixed;inset:0;z-index:200000;
+  background:linear-gradient(160deg,var(--navy) 0%,#0d2438 100%);
+  display:none;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-overlay.show{display:flex}
+.login-card{
+  width:min(360px,100%);
+  background:#fff;border-radius:22px;padding:32px 26px;
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+}
+.login-logo{font-size:22px;font-weight:800;color:var(--navy);text-align:center}
+.login-sub{font-size:13px;color:var(--tx-s);text-align:center;margin-top:4px;margin-bottom:24px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:12px;font-weight:700;color:var(--tx-s);margin-bottom:5px}
+.login-field input{
+  width:100%;box-sizing:border-box;border:1.5px solid var(--bd);border-radius:10px;
+  padding:11px 12px;font-size:15px;font-family:inherit;
+}
+.login-field input:focus{outline:none;border-color:var(--aqua)}
+.login-error{
+  background:#fdeeee;color:#b3261e;border-radius:8px;
+  padding:9px 12px;font-size:12.5px;margin-bottom:12px;
+}
+.login-hint{font-size:11.5px;color:var(--tx-m);text-align:center;margin-top:16px}
+.sync-status-box{
+  background:var(--surface2);border-radius:var(--r-md);padding:13px 14px;
+  font-size:13px;color:var(--tx);
+}
+.sync-status-box .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.sync-status-box .dot.online{background:#2e8b57}
+.sync-status-box .dot.offline{background:#b3261e}
+
+
+/* v28.0.6 数値表示・バックアップ互換・FCR修正 */
+.kpi-value,.stat-value,.metric-value,.big-num{font-variant-numeric:tabular-nums}
+.kpi-value{font-size:clamp(18px,4.6vw,30px)!important;line-height:1.12!important;white-space:nowrap!important;overflow:hidden!important;letter-spacing:-.04em!important}
+.kpi-value .unit{font-size:.55em!important;margin-left:2px!important}
+@media(max-width:720px){
+  .kpi-grid,.dash-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .kpi-card,.summary-card{min-width:0!important;overflow:hidden!important}
+  .kpi-card .value,.summary-card .value{font-size:clamp(18px,4.7vw,28px)!important;white-space:nowrap!important;letter-spacing:-.05em!important}
+}
+
+
+/* v28.0.7 数値収まり・FCR表示 完全修正 */
+.kpi .kpi-val{
+  font-size:clamp(18px,4.4vw,30px)!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  letter-spacing:-.055em!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.kpi .kpi-val span{font-size:.48em!important;margin-left:1px!important}
+.dash-cage-metric .m-val{
+  font-size:clamp(16px,4.2vw,22px)!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  letter-spacing:-.04em!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.dash-cage-metric div[style*="font-size:11px"]{
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  font-size:10px!important;
+  letter-spacing:-.03em!important;
+}
+@media(max-width:720px){
+  .kpi{min-width:0!important;padding:12px 10px!important}
+  .kpi .kpi-label{font-size:12px!important}
+  .kpi .kpi-sub{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dash-cage-metric{min-width:0!important;padding:10px 8px!important}
+}
+
+
+/* v28.0.8 display final */
+.kpi .kpi-val{font-size:clamp(16px,4.1vw,28px)!important;line-height:1.08!important;white-space:nowrap!important;overflow:hidden!important;letter-spacing:-.065em!important;font-variant-numeric:tabular-nums!important}
+.kpi .kpi-val span{font-size:.45em!important;margin-left:1px!important}
+.dash-cage-metric .m-val{font-size:clamp(15px,3.9vw,21px)!important;line-height:1.12!important;white-space:nowrap!important;overflow:hidden!important;letter-spacing:-.055em!important;font-variant-numeric:tabular-nums!important}
+.dash-cage-metric div[style*="font-size:11px"]{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;letter-spacing:-.04em!important}
+@media(max-width:720px){.kpi{padding:12px 9px!important;min-width:0!important}.dash-cage-metric{padding:10px 7px!important;min-width:0!important}.kpi .kpi-label{font-size:12px!important}.kpi .kpi-sub{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+
+/* v28.0.9 バックアップ復元の固まり対策 */
+.restore-progress{
+  position:fixed;inset:0;z-index:100000;
+  background:rgba(8,24,38,.42);
+  display:none;align-items:center;justify-content:center;
+  padding:24px;
+}
+.restore-progress.show{display:flex}
+.restore-progress-card{
+  width:min(360px,calc(100vw - 48px));
+  background:#fff;border-radius:22px;padding:24px;
+  text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.28);
+  color:#17324a;font-weight:700;
+}
+.restore-progress-bar{
+  height:8px;background:#e8f0f5;border-radius:999px;margin-top:16px;overflow:hidden;
+}
+.restore-progress-bar span{
+  display:block;height:100%;width:35%;background:#09bba6;border-radius:999px;
+  animation:restoreMove 1.2s infinite ease-in-out;
+}
+@keyframes restoreMove{
+  0%{transform:translateX(-120%)}
+  100%{transform:translateX(320%)}
+}
+
+
+/* v28.1 検証修正版：数値収まり */
+.kpi .kpi-val{font-size:clamp(15px,3.9vw,27px)!important;line-height:1.08!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;letter-spacing:-.07em!important;font-variant-numeric:tabular-nums!important;}
+.kpi .kpi-val span{font-size:.43em!important;margin-left:1px!important;letter-spacing:-.02em!important;}
+.dash-cage-metric .m-val{font-size:clamp(14px,3.7vw,20px)!important;line-height:1.12!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;letter-spacing:-.06em!important;font-variant-numeric:tabular-nums!important;}
+.dash-cage-metric div[style*="font-size:11px"]{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;letter-spacing:-.04em!important;}
+@media(max-width:720px){.kpi{min-width:0!important;padding:11px 8px!important}.kpi .kpi-label{font-size:12px!important}.kpi .kpi-sub{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dash-cage-metric{min-width:0!important;padding:9px 7px!important}}
+
+
+/* v28.1.1 登録メニューのレイアウト修正 */
+#quickModal .quick-grid,
+#addModal .quick-grid,
+#quickRegisterModal .quick-grid,
+.register-menu-grid,
+.quick-menu-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin-top:14px!important;
+}
+#quickModal .quick-grid .btn,
+#addModal .quick-grid .btn,
+#quickRegisterModal .quick-grid .btn,
+.register-menu-grid .btn,
+.quick-menu-grid .btn{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:88px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  white-space:normal!important;
+  padding:12px!important;
+  font-size:16px!important;
+  line-height:1.25!important;
+  border-radius:12px!important;
+}
+#quickModal .modal-card,
+#addModal .modal-card,
+#quickRegisterModal .modal-card{
+  width:min(560px,calc(100vw - 40px))!important;
+  max-width:calc(100vw - 40px)!important;
+  overflow:hidden!important;
+}
+#quickModal .modal-actions,
+#addModal .modal-actions,
+#quickRegisterModal .modal-actions{
+  display:flex!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  margin-top:14px!important;
+  padding-top:0!important;
+  border-top:0!important;
+}
+#quickModal .modal-actions .btn,
+#addModal .modal-actions .btn,
+#quickRegisterModal .modal-actions .btn{
+  width:auto!important;
+  min-width:96px!important;
+  height:auto!important;
+  padding:10px 18px!important;
+  display:inline-flex!important;
+}
+@media(max-width:480px){
+  #quickModal .quick-grid,
+  #addModal .quick-grid,
+  #quickRegisterModal .quick-grid,
+  .register-menu-grid,
+  .quick-menu-grid{
+    gap:10px!important;
+  }
+  #quickModal .quick-grid .btn,
+  #addModal .quick-grid .btn,
+  #quickRegisterModal .quick-grid .btn,
+  .register-menu-grid .btn,
+  .quick-menu-grid .btn{
+    height:78px!important;
+    font-size:15px!important;
+  }
+}
+
+
+/* v28.1.1 保険：登録メニュー内の直下ボタン崩れ防止 */
+.modal-card:has(.modal-title) .register-menu-grid,
+.modal-card:has(.modal-title) .quick-menu-grid{box-sizing:border-box}
+.modal-card .menu-btn{
+  width:100%!important;
+  min-width:0!important;
+}
+
+
+/* v28.2 バグ修正：スマホ実表示 */
+@media(max-width:720px){
+  #dashKPI{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  #dashKPI .kpi{
+    min-width:0!important;
+    padding:12px 10px!important;
+  }
+  #dashKPI .kpi-val{
+    font-size:clamp(18px,5.4vw,28px)!important;
+    line-height:1.05!important;
+    letter-spacing:-.06em!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+  }
+  #dashKPI .kpi-val span{
+    font-size:.45em!important;
+  }
+  .dash-cage-grid{
+    grid-template-columns:1fr!important;
+  }
+  .dash-cage-metric .m-val{
+    font-size:clamp(17px,5.1vw,24px)!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    letter-spacing:-.04em!important;
+  }
+  .dash-cage-metric div[style*="font-size:11px"]{
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  #quickRegisterModal .modal-card{
+    width:min(560px,calc(100vw - 40px))!important;
+    max-width:calc(100vw - 40px)!important;
+    overflow:hidden!important;
+  }
+  #quickRegisterModal .quick-grid,
+  #quickRegisterModal .quick-menu-grid,
+  #quickRegisterModal .register-menu-grid,
+  #quickRegisterModal [class*="quick"]{
+    max-width:100%!important;
+  }
+  #quickRegisterModal .quick-grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+  #quickRegisterModal .quick-card,
+  #quickRegisterModal .btn{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  #quickRegisterModal .modal-actions,
+  #quickRegisterModal .form-actions{
+    position:static!important;
+    display:flex!important;
+    justify-content:flex-start!important;
+    grid-template-columns:none!important;
+  }
+  #quickRegisterModal .modal-actions .btn,
+  #quickRegisterModal .form-actions .btn{
+    width:auto!important;
+    min-width:96px!important;
+    height:auto!important;
+  }
+}
 
 </style>
+
+<!-- Firebase（赤松水産 社内共有データ同期用） -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+    setPersistence, browserLocalPersistence
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, setDoc, getDocs, onSnapshot,
+    enableIndexedDbPersistence, writeBatch, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXc80rXfVBPhTVg4R1rxqKjReriatSYW0",
+    authDomain: "akamatsu-suisan-system.firebaseapp.com",
+    projectId: "akamatsu-suisan-system",
+    storageBucket: "akamatsu-suisan-system.firebasestorage.app",
+    messagingSenderId: "665705486304",
+    appId: "1:665705486304:web:11efcebcde304869f77d85",
+    measurementId: "G-9M4S48C9KG"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const fbAuth = getAuth(fbApp);
+  const fbDb = getFirestore(fbApp);
+
+  // ブラウザを閉じても次回までログイン状態を保つ
+  setPersistence(fbAuth, browserLocalPersistence).catch(()=>{});
+  // オフライン時もFirestoreのキャッシュで動けるようにする（対応ブラウザのみ）
+  enableIndexedDbPersistence(fbDb).catch(()=>{ /* 複数タブを開いている場合などは無効化されるが致命的ではない */ });
+
+  // 既存の非モジュールスクリプト（メインアプリ本体）から呼べるよう window に公開する
+  window.firebaseBridge = {
+    auth: fbAuth, db: fbDb,
+    onAuthStateChanged, signInWithEmailAndPassword, signOut,
+    collection, doc, setDoc, getDocs, onSnapshot, writeBatch, serverTimestamp
+  };
+  // 準備完了を知らせるイベント（メインスクリプトはこれを待ってから起動する）
+  window.dispatchEvent(new Event('firebaseBridgeReady'));
+</script>
+
 </head>
 <body>
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">赤松水産</div>
+    <div class="login-sub">養殖管理システムにログイン</div>
+    <div class="login-field">
+      <label for="loginEmail">メールアドレス</label>
+      <input type="email" id="loginEmail" autocomplete="username" placeholder="例：honten@akamatsu-suisan.example">
+    </div>
+    <div class="login-field">
+      <label for="loginPassword">パスワード</label>
+      <input type="password" id="loginPassword" autocomplete="current-password" placeholder="パスワード">
+    </div>
+    <div id="loginError" class="login-error" style="display:none"></div>
+    <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:6px" onclick="handleLoginSubmit()">ログイン</button>
+    <div class="login-hint">アカウントが必要な場合は管理者にお問い合わせください</div>
+  </div>
+</div>
+<div id="appBootOverlay" class="restore-progress show">
+  <div class="restore-progress-card">
+    <div id="appBootText">データを読み込んでいます…</div>
+    <div class="restore-progress-bar"><span></span></div>
+  </div>
+</div>
+<div id="restoreProgress" class="restore-progress">
+  <div class="restore-progress-card">
+    <div id="restoreProgressText">バックアップを復元しています…</div>
+    <div style="font-size:12px;color:#6f8798;margin-top:8px;font-weight:500">件数が多い場合、数秒かかります。画面を閉じないでください。</div>
+    <div class="restore-progress-bar"><span></span></div>
+  </div>
+</div>
+<div id="saveToast" class="save-toast">保存しました</div>
 
 <!-- ======== PC: サイドバー ======== -->
 <aside class="sidebar">
@@ -705,6 +1426,9 @@ tbody tr:hover td{background:var(--surface2);}
       </div>
       <button class="btn btn-primary btn-sm" onclick="showPage('record')">記録入力</button>
     </div>
+    <div class="v28-filter-row">
+      <div class="form-group"><label>漁場</label><select id="dashGroundFilter" onchange="setGroundFilter(this.value)"><option value="">全漁場</option></select></div>
+    </div>
     <div id="dashCageCards" class="dash-cage-list"></div>
   </div>
 
@@ -726,7 +1450,7 @@ tbody tr:hover td{background:var(--surface2);}
         <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828z"/></svg>
         日次記録入力
       </div><button class="btn btn-ghost btn-sm" onclick="copyLastRecord()">前回の日次記録をコピー</button></div>
-      <div class="copy-hint">給餌・死亡・水温・作業をまとめて登録します。前回コピーは直近の日次記録を反映します。</div>
+      <div class="copy-hint">給餌・死亡・水温・作業をまとめて登録します。前回の日次記録をコピーは直近の日次記録を反映します。</div>
       <div id="recExistAlert" class="alert alert-info" style="display:none;margin-bottom:12px">この日の記録が既にあります。上書き保存されます。</div>
       <div class="form-row2 keep-2 record-main-row" style="margin-bottom:12px">
         <div class="form-group"><label>日付</label><input type="date" id="recDate" onchange="loadExistingRecord()"></div>
@@ -736,9 +1460,17 @@ tbody tr:hover td{background:var(--surface2);}
           </select>
         </div>
       </div>
-      <div class="section-label">給餌・健康状態</div>
-      <div class="form-row3 keep-3 record-health-row" style="margin-bottom:12px">
-        <div class="form-group"><label>給餌量 (kg)</label><input type="number" id="recFeed" placeholder="0.0" step="0.1" min="0" inputmode="decimal"></div>
+      <div class="section-label">給餌明細</div>
+      <div class="feed-subnote">餌の種類ごとに使用量を入力します。原価は餌種類別のFIFOで計算します。</div>
+      <div class="feed-lines">
+        <div class="feed-line active" id="feedLine1"><div class="form-group"><label>餌種類 1</label><select id="recFeedType1"></select></div><div class="form-group"><label>使用量kg</label><input type="number" id="recFeedKg1" placeholder="0.0" step="0.1" min="0" inputmode="decimal"></div></div>
+        <div class="feed-line" id="feedLine2"><div class="form-group"><label>餌種類 2</label><select id="recFeedType2"></select></div><div class="form-group"><label>使用量kg</label><input type="number" id="recFeedKg2" placeholder="0.0" step="0.1" min="0" inputmode="decimal"></div></div>
+        <div class="feed-line" id="feedLine3"><div class="form-group"><label>餌種類 3</label><select id="recFeedType3"></select></div><div class="form-group"><label>使用量kg</label><input type="number" id="recFeedKg3" placeholder="0.0" step="0.1" min="0" inputmode="decimal"></div></div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm feed-add-btn" onclick="addFeedLine()">＋ 餌明細を追加</button>
+      <input type="hidden" id="recFeed">
+      <div class="section-label">健康状態</div>
+      <div class="form-row2 keep-2 record-health-row" style="margin-bottom:12px">
         <div class="form-group"><label>死亡尾数</label><input type="number" id="recDead" placeholder="0" min="0" inputmode="numeric"></div>
         <div class="form-group"><label>水温 (℃)</label><input type="number" id="recTemp" placeholder="20.0" step="0.1" inputmode="decimal"></div>
       </div>
@@ -904,6 +1636,7 @@ tbody tr:hover td{background:var(--surface2);}
       <option value="margin">粗利率分析</option>
       <option value="trend">月別推移</option>
       <option value="structure">原価構成比</option>
+      <option value="fcrtrend">FCR推移</option>
     </select>
   </div>
   <div class="pl-tabs pl-tabs-hidden">
@@ -913,6 +1646,7 @@ tbody tr:hover td{background:var(--surface2);}
     <button class="pl-tab"        data-tab="margin"    onclick="renderPL('margin')">粗利率分析</button>
     <button class="pl-tab"        data-tab="trend"     onclick="renderPL('trend')">月別推移</button>
     <button class="pl-tab"        data-tab="structure" onclick="renderPL('structure')">原価構成比</button>
+    <button class="pl-tab"        data-tab="fcrtrend" onclick="renderPL('fcrtrend')">FCR推移</button>
   </div>
   <div id="plLazyNotice" class="card" style="display:none;margin-top:12px">
     <div style="font-weight:700;margin-bottom:6px">損益集計は未更新です</div>
@@ -932,20 +1666,38 @@ tbody tr:hover td{background:var(--surface2);}
         <div style="height:240px;position:relative"><canvas id="plPieChart"></canvas></div>
         <div id="plStructureTable"></div>
       </div></div></div>
+
+  <div id="pl-fcrtrend" class="pl-pane" style="display:none">
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-l">FCR推移</div></div>
+      <div class="alert alert-info" style="margin-bottom:12px">測量日ごとの増肉係数を表示します。FCRは低いほど、餌が魚体増加につながっている状態です。</div>
+      <div class="chart-box lg"><canvas id="plFcrTrendChart"></canvas></div>
+      <div id="plFcrTrendTable"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ▼ 設定 -->
 <div class="page" id="page-settings">
   <div class="settings-nav settings-nav-grouped">
+    <div class="settings-group"><div class="settings-group-title">アカウント・同期</div>
+      <div id="syncStatusBox" class="sync-status-box">
+        <div id="syncStatusText">同期状況を確認しています…</div>
+        <button class="btn btn-ghost btn-sm" onclick="handleLogout()" style="margin-top:8px">ログアウト</button>
+      </div>
+    </div>
     <div class="settings-group"><div class="settings-group-title">履歴</div>
       <button class="settings-tab active" data-tab="history" onclick="renderSettings('history')">履歴</button>
       <button class="settings-tab" data-tab="oplog" onclick="renderSettings('oplog')">操作ログ</button>
     </div>
     <div class="settings-group"><div class="settings-group-title">マスタ管理</div>
+      <button class="settings-tab" data-tab="grounds" onclick="renderSettings('grounds')">漁場管理</button>
       <button class="settings-tab" data-tab="cages" onclick="renderSettings('cages')">生簀管理</button>
       <button class="settings-tab" data-tab="initial" onclick="renderSettings('initial')">飼育開始登録</button>
+      <button class="settings-tab" data-tab="transfer" onclick="renderSettings('transfer')">分養・移動</button>
       <button class="settings-tab" data-tab="species" onclick="renderSettings('species')">魚種管理</button>
       <button class="settings-tab" data-tab="costItems" onclick="renderSettings('costItems')">費用マスタ</button>
+      <button class="settings-tab" data-tab="feedTypes" onclick="renderSettings('feedTypes')">餌マスタ</button>
     </div>
     <div class="settings-group"><div class="settings-group-title">システム設定</div>
       <button class="settings-tab" data-tab="alloc" onclick="renderSettings('alloc')">配賦設定</button>
@@ -955,6 +1707,7 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="settings-group"><div class="settings-group-title">データ管理</div>
       <button class="settings-tab" data-tab="export" onclick="renderSettings('export')">データ出力</button>
       <button class="settings-tab" data-tab="backup" onclick="renderSettings('backup')">バックアップ</button>
+      <button class="settings-tab" data-tab="storage" onclick="renderSettings('storage')">ストレージ</button>
       <button class="settings-tab" data-tab="reset" onclick="renderSettings('reset')">初期化</button>
     </div>
   </div>
@@ -966,10 +1719,25 @@ tbody tr:hover td{background:var(--surface2);}
         <option value="feed">給餌履歴</option>
         <option value="ship">出荷履歴</option>
         <option value="cost">原価履歴</option>
+        <option value="transfer">分養・移動履歴</option>
       </select>
     </div>
     <div class="table-wrap">
       <table><thead id="histHead"></thead><tbody id="histBody"></tbody></table>
+    </div>
+  </div>
+
+
+  <!-- 漁場管理 -->
+  <div id="set-grounds" class="set-pane card" style="display:none;margin-top:0">
+    <div class="card-hd"><div class="card-hd-l">漁場管理</div></div>
+    <div class="alert alert-info" style="margin-bottom:12px">漁場は、生簀より上位の管理単位です。生簀管理で所属漁場を設定すると、ダッシュボードや日次記録で漁場別に絞り込めます。</div>
+    <div class="g2" style="align-items:end">
+      <div class="form-group"><label>漁場名</label><input type="text" id="groundName" placeholder="例）愛南A漁場"></div>
+      <button class="btn btn-primary" onclick="saveGround()">漁場を追加</button>
+    </div>
+    <div class="table-wrap" style="margin-top:14px">
+      <table><thead><tr><th>漁場名</th><th>所属生簀数</th><th>状態</th><th></th></tr></thead><tbody id="groundBody"></tbody></table>
     </div>
   </div>
 
@@ -979,8 +1747,29 @@ tbody tr:hover td{background:var(--surface2);}
       <button class="btn btn-primary btn-sm" onclick="openCageModal()">生簀を追加</button>
     </div>
     <div class="table-wrap">
-      <table><thead><tr><th>生簀名</th><th>魚種</th><th>現在尾数</th><th>平均体重</th><th>初期原価</th><th>導入日</th><th>状態</th><th></th></tr></thead>
+      <table><thead><tr><th>生簀名</th><th>漁場</th><th>魚種</th><th>現在尾数</th><th>平均体重</th><th>初期原価</th><th>導入日</th><th>状態</th><th></th></tr></thead>
       <tbody id="cageMgrBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- 分養・移動 -->
+  <div id="set-transfer" class="set-pane card" style="display:none;margin-top:0">
+    <div class="card-hd"><div class="card-hd-l">分養・移動登録</div></div>
+    <div class="alert alert-info" style="margin-bottom:12px">分養・移動を登録すると、移動元では「出した重量」、移動先では「入った重量」として扱い、増肉係数(FCR)の計算に反映します。</div>
+    <div class="g3">
+      <div class="form-group"><label>移動日</label><input type="date" id="trDate"></div>
+      <div class="form-group"><label>移動元生簀</label><select id="trFrom"></select></div>
+      <div class="form-group"><label>移動先生簀</label><select id="trTo"></select></div>
+    </div>
+    <div class="g3">
+      <div class="form-group"><label>移動尾数</label><input type="number" id="trCount" min="0" step="1" placeholder="例）1000"></div>
+      <div class="form-group"><label>平均体重（kg）</label><input type="number" id="trAvgWeight" min="0" step="0.001" placeholder="例）0.25"></div>
+      <div class="form-group"><label>移動重量（自動）</label><input type="text" id="trWeightPreview" readonly></div>
+    </div>
+    <div class="form-group"><label>メモ</label><input type="text" id="trMemo" placeholder="例）第1生簀から第2生簀へ分養"></div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="saveTransfer()">分養・移動を登録</button><button class="btn btn-ghost" onclick="clearTransferForm()">クリア</button></div>
+    <div class="table-wrap" style="margin-top:16px">
+      <table><thead><tr><th>日付</th><th>移動元</th><th>移動先</th><th>尾数</th><th>平均体重</th><th>重量</th><th>メモ</th><th></th></tr></thead><tbody id="transferBody"></tbody></table>
     </div>
   </div>
 
@@ -1043,6 +1832,25 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="table-wrap">
       <table><thead><tr><th>費目名</th><th>区分</th><th>状態</th><th></th></tr></thead>
       <tbody id="costItemMgrBody"></tbody></table>
+    </div>
+  </div>
+
+
+  <!-- 餌マスタ -->
+  <div id="set-feedTypes" class="set-pane card" style="display:none;margin-top:0">
+    <div class="card-hd"><div class="card-hd-l">餌マスタ</div></div>
+    <div class="alert alert-info" style="margin-bottom:12px">
+      餌の種類ごとに袋単価を管理します。標準は1袋20kgです。単価を変更しても、過去の仕入記録の金額は変わりません。
+    </div>
+    <div class="g3">
+      <div class="form-group"><label>餌名 *</label><input type="text" id="ftName" placeholder="例）EP配合飼料A"></div>
+      <div class="form-group"><label>1袋重量(kg)</label><input type="number" id="ftBagKg" value="20" min="0" step="0.1"></div>
+      <div class="form-group"><label>現在袋単価(円)</label><input type="number" id="ftBagPrice" placeholder="例）4200" min="0"></div>
+    </div>
+    <div class="form-group"><label>メモ</label><input type="text" id="ftMemo" placeholder="メーカー名・号数など"></div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="saveFeedType()">餌を追加</button></div>
+    <div class="table-wrap" style="margin-top:14px">
+      <table><thead><tr><th>餌名</th><th>袋重量</th><th>現在袋単価</th><th>kg単価</th><th>状態</th><th></th></tr></thead><tbody id="feedTypeBody"></tbody></table>
     </div>
   </div>
 
@@ -1121,6 +1929,19 @@ tbody tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
+  <!-- ストレージ -->
+  <div id="set-storage" class="set-pane card" style="display:none;margin-top:0">
+    <div class="card-hd"><div class="card-hd-l">ストレージ使用状況</div>
+      <button class="btn btn-ghost btn-sm" onclick="renderStorageUsage()">再計算</button>
+    </div>
+    <div id="storageUsageSummary" style="margin-bottom:14px"></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>項目</th><th>サイズ</th><th>件数</th></tr></thead>
+      <tbody id="storageUsageBody"></tbody></table>
+    </div>
+    <div id="storageCleanupArea" style="margin-top:16px"></div>
+  </div>
+
   <!-- 操作ログ -->
   <div id="set-oplog" class="set-pane card" style="display:none;margin-top:0">
     <div class="card-hd"><div class="card-hd-l">操作ログ</div>
@@ -1165,7 +1986,7 @@ tbody tr:hover td{background:var(--surface2);}
 <div class="modal-bg" id="quickRegisterModal">
   <div class="modal" style="max-width:360px">
     <div class="modal-hd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>登録メニュー</div>
-    <div class="quick-modal-grid">
+    <div class="quick-modal-grid quick-menu-grid">
       <button class="quick-modal-btn" onclick="closeModal('quickRegisterModal');showPage('record')">日次記録</button>
       <button class="quick-modal-btn" onclick="closeModal('quickRegisterModal');showPage('ship');setTimeout(openShipModal,80)">出荷登録</button>
       <button class="quick-modal-btn" onclick="closeModal('quickRegisterModal');showPage('cost');setTimeout(()=>{showCostTab('cost');openCostModal();},80)">コスト登録</button>
@@ -1207,7 +2028,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="form-group"><label>メモ</label><input type="text" id="shipNote" placeholder="規格など"></div>
     </div>
     <div class="form-actions">
-      <button class="btn btn-ghost" onclick="copyLastShip()">前回コピー</button>
+      <button class="btn btn-ghost" onclick="copyLastShip()">前回の日次記録をコピー</button>
       <button class="btn btn-primary" onclick="saveShip()">登録する</button>
       <button class="btn btn-ghost" onclick="closeModal('shipModal')">キャンセル</button>
     </div>
@@ -1235,7 +2056,7 @@ tbody tr:hover td{background:var(--surface2);}
       <div class="form-group"><label>メモ</label><input type="text" id="costNote" placeholder="仕入先など"></div>
     </div>
     <div class="form-actions">
-      <button class="btn btn-ghost" onclick="copyLastCost()">前回コピー</button>
+      <button class="btn btn-ghost" onclick="copyLastCost()">前回の日次記録をコピー</button>
       <button class="btn btn-primary" onclick="saveCost()">登録する</button>
       <button class="btn btn-ghost" onclick="closeModal('costModal')">キャンセル</button>
     </div>
@@ -1248,13 +2069,19 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="modal-hd"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>飼料の仕入を登録</div>
     <div class="form-row2" style="margin-bottom:12px">
       <div class="form-group"><label>仕入日</label><input type="date" id="feedDate"></div>
-      <div class="form-group"><label>品名・銘柄</label><input type="text" id="feedName" placeholder="A社EP飼料 2号"></div>
+      <div class="form-group"><label>餌種類</label><select id="feedType" onchange="onFeedTypeChange()"></select></div>
     </div>
     <div class="form-row3" style="margin-bottom:14px">
-      <div class="form-group"><label>数量 (kg)</label><input type="number" id="feedQty" placeholder="0.0" step="0.1" min="0" oninput="calcFeedAmt()"></div>
-      <div class="form-group"><label>単価 (円/kg)</label><input type="number" id="feedUnitPrice" placeholder="0" min="0" oninput="calcFeedAmt()"></div>
+      <div class="form-group"><label>袋数</label><input type="number" id="feedBags" placeholder="0" step="1" min="0" oninput="calcFeedAmt()"></div>
+      <div class="form-group"><label>1袋単価(円)</label><input type="number" id="feedBagPrice" placeholder="0" min="0" oninput="calcFeedAmt()"></div>
+      <div class="form-group"><label>1袋重量(kg)</label><input type="number" id="feedBagKg" value="20" step="0.1" min="0" oninput="calcFeedAmt()"></div>
+    </div>
+    <div class="form-row3" style="margin-bottom:14px">
+      <div class="form-group"><label>総重量kg（自動）</label><input type="number" id="feedQty" readonly></div>
+      <div class="form-group"><label>kg単価（自動）</label><input type="number" id="feedUnitPrice" readonly></div>
       <div class="form-group"><label>金額（自動）</label><input type="number" id="feedAmount" readonly></div>
     </div>
+    <input type="hidden" id="feedName">
     <div class="form-actions">
       <button class="btn btn-primary" onclick="saveFeed()">登録する</button>
       <button class="btn btn-ghost" onclick="closeModal('feedModal')">キャンセル</button>
@@ -1268,7 +2095,10 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="modal-hd"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18M6 3v18M12 3v18M18 3v18" stroke-width="1.5"/></svg><span id="cageModalTitle">生簀を追加</span></div>
     <input type="hidden" id="cageId">
     <div class="form-row2" style="margin-bottom:12px">
+      <div class="form-group"><label>所属漁場</label><select id="cageGround"><option value="">未設定</option></select></div>
       <div class="form-group"><label>生簀名 *</label><input type="text" id="cageName" placeholder="例）第1生簀"></div>
+    </div>
+    <div class="form-row2" style="margin-bottom:12px">
       <div class="form-group"><label>現在尾数</label><input type="number" id="cageCount" placeholder="0" min="0" inputmode="numeric"></div>
     </div>
     <div class="form-row2" style="margin-bottom:12px">
@@ -1321,7 +2151,22 @@ const fmtMoneyShort = n => {
 const shortText = (v,len=8) => { const t=String(v||'—'); return t.length>len ? t.slice(0,len)+'…' : t; };
 
 
+
+function showSaveToast(message='保存しました'){
+  const el=document.getElementById('saveToast');
+  if(!el){
+    alert(message);
+    return;
+  }
+  el.textContent=message;
+  el.classList.add('show');
+  clearTimeout(window.__saveToastTimer);
+  window.__saveToastTimer=setTimeout(()=>el.classList.remove('show'),1600);
+}
+
 function toast(msg){
+  if(String(msg).includes('保存しました')){showSaveToast(msg);return;}
+
   const el=$('toast'); el.textContent=msg; el.classList.add('show');
   clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2600);
 }
@@ -1334,14 +2179,533 @@ function confirmDlg(title,msg,okLabel,onOk){
 function openModal(id) { $(id).classList.add('open'); }
 function closeModal(id){ $(id).classList.remove('open'); }
 
+// ─── Undo（操作の取り消し） ───────────────────────────────
+// 直前の編集操作を1手分スナップショットとして保持し、復元できるようにする。
+// データKEY全体を退避するため、追加・削除・編集の種別を問わず確実に戻せる。
+const UNDO_KEYS=['cages','records','ships','costs','inventory','transfers','feedTypes','grounds','species','costItems'];
+let undoSnapshot=null;        // { label, data:{key:json} }
+let undoToastTimer=null;
+// 次の保存操作の直前状態を退避する。label は「測量記録の削除」など人間向けの説明。
+function pushUndo(label){
+  try{
+    const data={};
+    UNDO_KEYS.forEach(k=>{
+      const v=idbPreloadCache[KEYS[k]];
+      // 参照ではなく値として退避する（後の変更で巻き添えにならないようディープコピー）
+      data[k]=v===undefined?undefined:JSON.parse(JSON.stringify(v));
+    });
+    undoSnapshot={label:label||'操作', data};
+  }catch(e){ undoSnapshot=null; }
+}
+function performUndo(){
+  if(!undoSnapshot) return;
+  const snap=undoSnapshot;
+  undoSnapshot=null;
+  hideUndoToast();
+  // 退避しておいた値を save() 経由で書き戻す（IndexedDB/LocalStorageどちらでも一貫して動く）
+  UNDO_KEYS.forEach(k=>{
+    const v=snap.data[k];
+    if(v===undefined){
+      delete idbPreloadCache[KEYS[k]];
+      idbDelete(KEYS[k]);
+    }else{
+      save(KEYS[k], v);
+    }
+  });
+  reloadStateFromStore();
+  invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
+  if(typeof showPage==='function') showPage(curPage||'dash');
+  toast('操作を取り消しました');
+}
+// 編集後に「元に戻す」ボタン付きトーストを表示する
+function showUndoToast(){
+  if(!undoSnapshot) return;
+  let el=$('undoToast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='undoToast';
+    el.className='undo-toast';
+    document.body.appendChild(el);
+  }
+  el.innerHTML=`<span class="undo-toast-msg">${undoSnapshot.label}を保存しました</span><button class="undo-toast-btn" id="undoToastBtn">元に戻す</button>`;
+  el.classList.add('show');
+  $('undoToastBtn').onclick=performUndo;
+  clearTimeout(undoToastTimer);
+  undoToastTimer=setTimeout(hideUndoToast,6000);
+}
+function hideUndoToast(){
+  const el=$('undoToast'); if(el) el.classList.remove('show');
+  clearTimeout(undoToastTimer);
+}
+
+// ─── Firestore 同期層（赤松水産 社内共有） ──────────────────
+// 設計：cages/records/ships/...等、各データ種別ごとに1つのFirestoreドキュメントへ
+// 「配列まるごと」を保存する。複雑なクエリは行わず、常に全件を読み書きするシンプルな方式。
+// IndexedDBは「オフラインでもすぐ開ける表示用キャッシュ」として引き続き使う。
+// Firestoreが正（最新の真実）で、IndexedDBはその写し、という位置づけ。
+const FS_WORKSPACE='akamatsu'; // 社内共有スペース名（固定）
+let fsUser=null;          // ログイン中のユーザー（Firebase Authのuserオブジェクト）
+let fsUnsubscribers=[];   // onSnapshotの監視解除関数を保持
+let fsApplyingRemote=false; // リモートからの反映中に自分のsave()を誤発火させないためのフラグ
+let fsSyncEnabled=false;  // Firestoreに接続できているか
+
+function fsDocRef(key){
+  const { doc, collection } = window.firebaseBridge;
+  return doc(window.firebaseBridge.db, 'workspaces', FS_WORKSPACE, 'data', key);
+}
+// 1キー分をFirestoreへ書き込む（save()から投げっぱなしで呼ぶ）
+async function fsPut(key, value){
+  if(!fsSyncEnabled || fsApplyingRemote) return;
+  try{
+    const { setDoc, serverTimestamp } = window.firebaseBridge;
+    await setDoc(fsDocRef(key), { value, updatedAt: serverTimestamp(), updatedBy: fsUser?.email||'' });
+  }catch(e){
+    console.error('Firestoreへの保存に失敗しました（オフラインの可能性があります）', key, e);
+  }
+}
+// 起動時：Firestoreから全キーを1回読み込む
+async function fsGetAll(){
+  const { getDocs, collection } = window.firebaseBridge;
+  const out={};
+  try{
+    const snap=await getDocs(collection(window.firebaseBridge.db, 'workspaces', FS_WORKSPACE, 'data'));
+    snap.forEach(d=>{ out[d.id]=d.data().value; });
+  }catch(e){
+    console.error('Firestoreからの読み込みに失敗しました',e);
+    return null;
+  }
+  return out;
+}
+// リアルタイム監視を開始する。他拠点の変更が入ったら自動でローカルへ反映し、画面を更新する。
+function fsStartListening(){
+  const { onSnapshot, collection } = window.firebaseBridge;
+  const ref=collection(window.firebaseBridge.db, 'workspaces', FS_WORKSPACE, 'data');
+  const unsub=onSnapshot(ref, (snap)=>{
+    let changed=false;
+    fsApplyingRemote=true;
+    snap.docChanges().forEach(change=>{
+      const key=change.doc.id;
+      if(change.type==='removed') return;
+      const newValue=change.doc.data().value;
+      const before=JSON.stringify(idbPreloadCache[key]);
+      const after=JSON.stringify(newValue);
+      if(before!==after){
+        idbPreloadCache[key]=newValue;
+        idbPut(key,newValue); // 受け取った最新をローカルキャッシュ(IndexedDB)にも保存
+        changed=true;
+      }
+    });
+    fsApplyingRemote=false;
+    if(changed){
+      reloadStateFromStore();
+      invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
+      if(typeof showPage==='function') showPage(curPage||'dash');
+      showSyncToast();
+    }
+  }, (err)=>{
+    console.error('Firestoreの監視でエラーが発生しました',err);
+  });
+  fsUnsubscribers.push(unsub);
+}
+function fsStopListening(){
+  fsUnsubscribers.forEach(u=>{ try{u();}catch(e){} });
+  fsUnsubscribers=[];
+}
+let syncToastTimer=null;
+function showSyncToast(){
+  let el=document.getElementById('syncToast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='syncToast';
+    el.className='save-toast';
+    document.body.appendChild(el);
+  }
+  el.textContent='他の拠点の更新を反映しました';
+  el.classList.add('show');
+  clearTimeout(syncToastTimer);
+  syncToastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// 1キー分をFirestoreから削除する（初期化など、明示的にデータを消す操作専用）
+async function fsDeleteKey(key){
+  if(!fsSyncEnabled) return;
+  try{
+    const { setDoc, serverTimestamp } = window.firebaseBridge;
+    // Firestoreのドキュメント自体を消すと再生成のタイミングでルール上の扱いが複雑になるため、
+    // 値を空配列/nullにして「空である」ことを明示する方式にする。
+    await setDoc(fsDocRef(key), { value: Array.isArray(idbPreloadCache[key])?[]:null, updatedAt: serverTimestamp(), updatedBy: fsUser?.email||'', deleted:true });
+  }catch(e){
+    console.error('Firestoreからの削除に失敗しました', key, e);
+  }
+}
+
+// ─── ログイン ─────────────────────────────────────────────
+function showLoginOverlay(){ $('loginOverlay').classList.add('show'); }
+function hideLoginOverlay(){ $('loginOverlay').classList.remove('show'); }
+function showLoginError(msg){
+  const el=$('loginError');
+  el.textContent=msg;
+  el.style.display='block';
+}
+function clearLoginError(){ $('loginError').style.display='none'; }
+async function handleLoginSubmit(){
+  clearLoginError();
+  const email=$('loginEmail').value.trim();
+  const password=$('loginPassword').value;
+  if(!email||!password){ showLoginError('メールアドレスとパスワードを入力してください'); return; }
+  const btn=$('loginSubmitBtn');
+  btn.disabled=true; btn.textContent='ログイン中…';
+  try{
+    const { signInWithEmailAndPassword, auth } = window.firebaseBridge;
+    await signInWithEmailAndPassword(window.firebaseBridge.auth, email, password);
+    // 成功時は onAuthStateChanged が発火し、以降の起動処理が自動で進む
+  }catch(e){
+    const code=e&&e.code||'';
+    if(code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found')){
+      showLoginError('メールアドレスまたはパスワードが正しくありません');
+    }else if(code.includes('too-many-requests')){
+      showLoginError('試行回数が多すぎます。しばらく待ってから再度お試しください');
+    }else if(code.includes('network')){
+      showLoginError('通信エラーが発生しました。ネット接続をご確認ください');
+    }else{
+      showLoginError('ログインに失敗しました');
+      console.error(e);
+    }
+  }finally{
+    btn.disabled=false; btn.textContent='ログイン';
+  }
+}
+function handleLogout(){
+  confirmDlg('ログアウト','ログアウトしますか？','ログアウトする',async ()=>{
+    try{
+      fsStopListening();
+      const { signOut, auth } = window.firebaseBridge;
+      await signOut(window.firebaseBridge.auth);
+    }catch(e){ console.error(e); }
+  });
+}
+function updateSyncStatusBox(){
+  const el=$('syncStatusText'); if(!el) return;
+  if(fsUser){
+    el.innerHTML=`<span class="dot online"></span>同期中：${fsUser.email}としてログイン中`;
+  }else{
+    el.innerHTML=`<span class="dot offline"></span>未ログイン（このデータはこの端末だけに保存されています）`;
+  }
+}
+
+// ─── IndexedDB 永続化層 ───────────────────────────────────
+// LocalStorage（上限約5MB）からIndexedDB（上限は端末の空き容量次第、通常は数百MB〜）へ移行。
+// 既存コードは cages/records 等のメモリ上の配列をそのまま読み書きする設計を維持するため、
+// 「起動時に全件を同期的に読み込んでおく（事前ロード）」「保存は非同期で裏に投げる」方式にする。
+// これにより save(KEYS.records, records) のような既存の呼び出し箇所は無改修で動く。
+const IDB_NAME='aqua_manager_db';
+const IDB_STORE='kv';
+const IDB_VERSION=1;
+let idbHandle=null;          // IDBDatabase インスタンス
+let idbReady=null;           // 初期化Promise
+let idbWriteQueue=Promise.resolve(); // 書き込みを直列化し、競合・順序崩れを防ぐ
+let idbAvailable=true;       // IndexedDBが使えない環境ではLocalStorageにフォールバック
+
+function idbOpen(){
+  if(idbReady) return idbReady;
+  idbReady=new Promise((resolve)=>{
+    if(!('indexedDB' in window)){ idbAvailable=false; resolve(null); return; }
+    let req;
+    try{ req=indexedDB.open(IDB_NAME, IDB_VERSION); }
+    catch(e){ idbAvailable=false; resolve(null); return; }
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess=()=>{ idbHandle=req.result; resolve(idbHandle); };
+    req.onerror=()=>{ idbAvailable=false; resolve(null); };
+    req.onblocked=()=>{ idbAvailable=false; resolve(null); };
+  });
+  return idbReady;
+}
+// 全キーをまとめて読み込む（起動時に1回だけ呼ぶ）
+async function idbGetAll(){
+  const db=await idbOpen();
+  if(!db) return null;
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(IDB_STORE,'readonly');
+      const store=tx.objectStore(IDB_STORE);
+      const out={};
+      const cursorReq=store.openCursor();
+      cursorReq.onsuccess=(ev)=>{
+        const cursor=ev.target.result;
+        if(cursor){ out[cursor.key]=cursor.value; cursor.continue(); }
+        else resolve(out);
+      };
+      cursorReq.onerror=()=>resolve(out);
+    }catch(e){ resolve({}); }
+  });
+}
+// 1キー書き込み（投げっぱなしで使う。直列化キューで順序を保証）
+function idbPut(key,value){
+  idbWriteQueue=idbWriteQueue.then(async ()=>{
+    const db=await idbOpen();
+    if(!db){
+      // IndexedDBが使えない環境ではLocalStorageへフォールバック保存
+      try{ localStorage.setItem(key, typeof value==='string'?value:JSON.stringify(value)); }catch(e){}
+      return;
+    }
+    return new Promise((resolve)=>{
+      try{
+        const tx=db.transaction(IDB_STORE,'readwrite');
+        tx.objectStore(IDB_STORE).put(value,key);
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>resolve();
+      }catch(e){ resolve(); }
+    });
+  });
+  return idbWriteQueue;
+}
+function idbDelete(key){
+  idbWriteQueue=idbWriteQueue.then(async ()=>{
+    const db=await idbOpen();
+    if(!db){ try{ localStorage.removeItem(key); }catch(e){} return; }
+    return new Promise((resolve)=>{
+      try{
+        const tx=db.transaction(IDB_STORE,'readwrite');
+        tx.objectStore(IDB_STORE).delete(key);
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>resolve();
+      }catch(e){ resolve(); }
+    });
+  });
+  return idbWriteQueue;
+}
+// IndexedDBの推定使用量（対応ブラウザのみ。値が取れない場合はnull）
+async function idbEstimateUsage(){
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      const est=await navigator.storage.estimate();
+      return {usage:est.usage||0, quota:est.quota||0};
+    }
+  }catch(e){}
+  return null;
+}
+
 // ─── LocalStorage ─────────────────────────────────────────
 const KEYS={
   cages:'aq_cages', species:'aq_species', records:'aq_records',
   ships:'aq_ships', costs:'aq_costs',  inventory:'aq_inventory',
-  costItems:'aq_costItems', settings:'aq_settings', oplog:'aq_oplog', summary:'aq_summary'
+  costItems:'aq_costItems', settings:'aq_settings', oplog:'aq_oplog', summary:'aq_summary', transfers:'aq_transfers', grounds:'aq_grounds', feedTypes:'aq_feedTypes'
 };
-const load = k => { try{ return JSON.parse(localStorage.getItem(k))||null; }catch{ return null; } };
-const save = (k,v) => { localStorage.setItem(k, JSON.stringify(v)); invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache(); };
+// idbPreloadCache: 起動時に idbGetAll() で読み込んだ全データのスナップショット。
+// load() はこのキャッシュを同期的に参照するだけなので、既存コードの呼び出し方は変えずに済む。
+let idbPreloadCache={};
+const load = k => {
+  if(Object.prototype.hasOwnProperty.call(idbPreloadCache,k)){
+    const v=idbPreloadCache[k];
+    return v===undefined||v===null?null:v;
+  }
+  // 事前ロードに無ければ、移行直後の互換性のためLocalStorageも一応参照する
+  try{ const raw=localStorage.getItem(k); return raw?JSON.parse(raw):null; }catch{ return null; }
+};
+const save = (k,v) => {
+  idbPreloadCache[k]=v;
+  idbPut(k,v);
+  fsPut(k,v); // 社内共有データとしてFirestoreへも書き込む（オフライン時は自動でキューされ、復帰後に送信される）
+  invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache(); checkStorageQuota();
+};
+
+// ─── LocalStorage 容量監視 ─────────────────────────────────
+// 多くのブラウザでドメインあたり約5MBが上限。使用率80%超で警告バナーを出す。
+const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
+function getStorageUsage(){
+  let bytes=0;
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      const val=localStorage.getItem(key);
+      // UTF-16換算（1文字2バイト）でキー＋値の概算サイズを積算
+      bytes += (key.length + (val?val.length:0)) * 2;
+    }
+  }catch(e){ return null; }
+  return bytes;
+}
+async function checkStorageQuota(){
+  const banner=ensureStorageBanner();
+  // IndexedDB使用時は端末の実際の空き容量（navigator.storage.estimate）を基準にする。
+  // これは通常、数百MB〜数GB単位になるため、LocalStorageの固定5MB枠より大幅に緩い。
+  if(idbAvailable){
+    const est=await idbEstimateUsage();
+    if(est && est.quota>0){
+      const ratio=est.usage/est.quota;
+      if(ratio>=0.8){
+        const pct=Math.round(ratio*100);
+        const mb=(est.usage/1024/1024).toFixed(1);
+        const quotaMb=(est.quota/1024/1024).toFixed(0);
+        banner.querySelector('.storage-banner-msg').innerHTML=
+          `端末の保存容量が残りわずかです（使用 ${mb}MB／割当 ${quotaMb}MB・約${pct}%）。古い記録の整理、またはJSONバックアップ後の不要データ削除をおすすめします。`;
+        banner.classList.add('show');
+      }else{
+        banner.classList.remove('show');
+      }
+      return;
+    }
+    // estimate()が使えない環境ではバナーは出さない（IndexedDBは十分な余裕がある前提のため）
+    banner.classList.remove('show');
+    return;
+  }
+  // フォールバック：IndexedDBが使えずLocalStorageのみで動作している場合は、従来通り5MB枠を基準にする
+  const bytes=getStorageUsage();
+  if(bytes===null) return;
+  const ratio=bytes/STORAGE_LIMIT_BYTES;
+  if(ratio>=0.8){
+    const pct=Math.round(ratio*100);
+    const mb=(bytes/1024/1024).toFixed(1);
+    banner.querySelector('.storage-banner-msg').innerHTML=
+      `データ保存容量が残りわずかです（使用 ${mb}MB／約${pct}%）。古い記録の整理、またはJSONバックアップ後の不要データ削除をおすすめします。`;
+    banner.classList.add('show');
+  }else{
+    banner.classList.remove('show');
+  }
+}
+function ensureStorageBanner(){
+  let el=document.getElementById('storageBanner');
+  if(!el){
+    el=document.createElement('div');
+    el.id='storageBanner';
+    el.className='storage-banner';
+    el.innerHTML=`<span class="storage-banner-icon">⚠</span><span class="storage-banner-msg"></span><button class="storage-banner-close" aria-label="閉じる">×</button>`;
+    el.querySelector('.storage-banner-close').onclick=()=>el.classList.remove('show');
+    document.body.appendChild(el);
+  }
+  return el;
+}
+// 設定＞ストレージ タブ：キーごとの使用量を一覧表示する
+const STORAGE_KEY_LABELS={
+  aq_cages:'生簀', aq_species:'魚種', aq_records:'測量・給餌記録', aq_ships:'出荷記録',
+  aq_costs:'コスト記録', aq_inventory:'飼料仕入記録', aq_costItems:'費用マスタ',
+  aq_settings:'設定', aq_oplog:'操作ログ', aq_summary:'サマリー', aq_transfers:'分養・移動記録',
+  aq_grounds:'漁場', aq_feedTypes:'餌マスタ', aq_backups:'バックアップ履歴（端末内）'
+};
+async function renderStorageUsage(){
+  const rows=[];
+  let total=0;
+  let legacyBackupCount=0, legacyBackupBytes=0;
+  try{
+    // データの実体は idbPreloadCache（IndexedDB利用時）または LocalStorage（フォールバック時）にある
+    const sourceKeys=idbAvailable
+      ? Object.keys(idbPreloadCache)
+      : Array.from({length:localStorage.length},(_,i)=>localStorage.key(i));
+    for(const key of sourceKeys){
+      const value=idbAvailable ? idbPreloadCache[key] : (()=>{ try{return JSON.parse(localStorage.getItem(key));}catch{return localStorage.getItem(key);} })();
+      const json=typeof value==='string'?value:JSON.stringify(value);
+      const bytes=(key.length+(json?json.length:0))*2;
+      total+=bytes;
+      let count='—';
+      if(Array.isArray(value)) count=value.length+'件';
+      if(key==='aq_backups' && Array.isArray(value)){
+        value.forEach(b=>{
+          if(Array.isArray(b.records)||Array.isArray(b.cages)){
+            legacyBackupCount++;
+            legacyBackupBytes+=JSON.stringify(b).length*2;
+          }
+        });
+        count=value.length+'件（うち全データ保存形式 '+legacyBackupCount+'件）';
+      }
+      rows.push({key, label:STORAGE_KEY_LABELS[key]||key, bytes, count});
+    }
+  }catch(e){
+    $('storageUsageSummary').innerHTML='<div class="alert alert-danger">使用量を取得できませんでした。</div>';
+    return;
+  }
+  rows.sort((a,b)=>b.bytes-a.bytes);
+  const usedMB=(total/1024/1024).toFixed(2);
+
+  let summaryHtml;
+  if(idbAvailable){
+    const est=await idbEstimateUsage();
+    if(est && est.quota>0){
+      const quotaMB=(est.quota/1024/1024).toFixed(0);
+      const actualUsedMB=(est.usage/1024/1024).toFixed(2);
+      const pct=Math.round(est.usage/est.quota*100);
+      const barColor=pct>=80?'var(--danger)':pct>=50?'var(--warn)':'var(--aqua)';
+      summaryHtml=`
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div style="font-size:20px;font-weight:800">${actualUsedMB} MB <span style="font-size:13px;font-weight:500;color:var(--tx-s)">／ 端末の割当容量 約${quotaMB}MB（${pct}%）</span></div>
+        </div>
+        <div style="height:10px;border-radius:6px;background:var(--surface2);overflow:hidden">
+          <div style="height:100%;width:${Math.min(pct,100)}%;background:${barColor};border-radius:6px"></div>
+        </div>
+        <div style="font-size:12px;color:var(--tx-m);margin-top:6px">保存方式：IndexedDB（端末の空き容量に応じて自動的に拡張されます）。アプリ内データの合計は ${usedMB}MB です。</div>`;
+    }else{
+      summaryHtml=`
+        <div style="font-size:20px;font-weight:800">${usedMB} MB <span style="font-size:13px;font-weight:500;color:var(--tx-s)">（アプリ内データ合計）</span></div>
+        <div style="font-size:12px;color:var(--tx-m);margin-top:6px">保存方式：IndexedDB。このブラウザでは詳細な容量割当を取得できませんが、LocalStorageの5MB制限は受けません。</div>`;
+    }
+  }else{
+    const limitMB=(STORAGE_LIMIT_BYTES/1024/1024).toFixed(0);
+    const pct=Math.round(total/STORAGE_LIMIT_BYTES*100);
+    const barColor=pct>=80?'var(--danger)':pct>=50?'var(--warn)':'var(--aqua)';
+    summaryHtml=`
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <div style="font-size:20px;font-weight:800">${usedMB} MB <span style="font-size:13px;font-weight:500;color:var(--tx-s)">／ 目安上限 ${limitMB}MB（${pct}%）</span></div>
+      </div>
+      <div style="height:10px;border-radius:6px;background:var(--surface2);overflow:hidden">
+        <div style="height:100%;width:${Math.min(pct,100)}%;background:${barColor};border-radius:6px"></div>
+      </div>
+      <div style="font-size:12px;color:var(--warn);margin-top:6px">保存方式：LocalStorage（このブラウザではIndexedDBが利用できないためフォールバック動作中）。</div>`;
+  }
+  $('storageUsageSummary').innerHTML=summaryHtml;
+  $('storageUsageBody').innerHTML=rows.map(r=>
+    `<tr><td>${r.label}</td><td>${(r.bytes/1024).toFixed(1)} KB</td><td>${r.count}</td></tr>`
+  ).join('');
+  const cleanupEl=$('storageCleanupArea');
+  if(legacyBackupCount>0){
+    cleanupEl.innerHTML=`<div class="alert alert-warn">
+      バックアップ履歴に、容量を多く使う「全データ保存形式」が${legacyBackupCount}件残っています（合計約${(legacyBackupBytes/1024).toFixed(0)}KB）。
+      これは過去のバージョンで保存されたもので、現在は概要のみ保存する方式に変わっています。
+      JSONファイルとして保存済みであれば、ここで履歴を概要のみに圧縮できます。
+      <div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="compactBackupHistory()">バックアップ履歴を圧縮して容量を空ける</button></div>
+    </div>`;
+  }else{
+    cleanupEl.innerHTML='';
+  }
+}
+// aq_backups（端末内バックアップ履歴）専用の読み書きヘルパー。
+// 通常データと同じく idbPreloadCache を経由させ、IndexedDB/LocalStorageどちらでも一貫させる。
+function getBackupHistory(){
+  const v=idbPreloadCache['aq_backups'];
+  if(Array.isArray(v)) return v;
+  try{ const raw=localStorage.getItem('aq_backups'); return raw?JSON.parse(raw):[]; }catch{ return []; }
+}
+function setBackupHistory(arr){
+  idbPreloadCache['aq_backups']=arr;
+  idbPut('aq_backups',arr);
+}
+// aq_backups 内の「全データ保存形式」エントリを概要のみに置き換え、容量を解放する
+function compactBackupHistory(){
+  confirmDlg('バックアップ履歴を圧縮','端末内のバックアップ履歴を概要のみに圧縮します。最新のJSONファイルは別途保存済みであることを確認してください。よろしいですか？','圧縮する',()=>{
+    try{
+      const saved=getBackupHistory();
+      const compacted=saved.map(b=>{
+        if(!(Array.isArray(b.records)||Array.isArray(b.cages))) return b;
+        return {
+          savedAt:b.savedAt, exportedAt:b.exportedAt,
+          summary:{
+            cages:(b.cages||[]).length, records:(b.records||[]).length, ships:(b.ships||[]).length,
+            costs:(b.costs||[]).length, inventory:(b.inventory||[]).length, transfers:(b.transfers||[]).length,
+            grounds:(b.grounds||[]).length, feedTypes:(b.feedTypes||[]).length
+          }
+        };
+      });
+      setBackupHistory(compacted);
+      toast('バックアップ履歴を圧縮しました');
+      addLog('ストレージ整理','バックアップ履歴を圧縮');
+      renderStorageUsage();
+      checkStorageQuota();
+      if(curSetTab==='backup') renderBackup();
+    }catch(e){
+      toast('圧縮に失敗しました');
+    }
+  });
+}
 
 // ─── デフォルト ───────────────────────────────────────────
 function defaultSpecies(){
@@ -1377,10 +2741,19 @@ function defaultCostItems(){
   ];
 }
 function defaultSettings(){
-  return { allocRule:'feed', units:['kg','尾','箱','本','式'], theme:'light' };
+  return { allocRule:'feed', units:['kg','尾','箱','本','式'], theme:'light', groundFilter:'' };
+}
+function defaultGrounds(){
+  return [{id:'gr0',name:'未設定',active:true,builtin:true}];
+}
+function defaultFeedTypes(){
+  return [{id:'ft-common',name:'共通飼料',bagKg:20,bagPrice:0,active:true,builtin:true,priceHistory:[]}];
 }
 
 // ─── 状態 ─────────────────────────────────────────────────
+// ─── 状態 ─────────────────────────────────────────────────
+// 初回評価時点ではIndexedDBの読み込みがまだ完了していない可能性があるため、
+// ここでは空・デフォルト値で確保しておき、idbGetAll() 完了後に reloadStateFromStore() で実値に差し替える。
 let cages     = load(KEYS.cages)     || [];
 let species   = load(KEYS.species)   || defaultSpecies();
 let records   = load(KEYS.records)   || [];
@@ -1390,7 +2763,25 @@ let inventory = load(KEYS.inventory) || [];
 let costItems = load(KEYS.costItems) || defaultCostItems();
 let settings  = load(KEYS.settings)  || defaultSettings();
 let oplog     = load(KEYS.oplog)     || [];
+let transfers = load(KEYS.transfers) || [];
+let grounds   = load(KEYS.grounds)   || defaultGrounds();
+let feedTypes = load(KEYS.feedTypes) || defaultFeedTypes();
 let curPage='dash', curPLTab='summary', curSetTab='history';
+// IndexedDBからの読み込み完了後、各状態変数を実値に差し替える
+function reloadStateFromStore(){
+  cages     = load(KEYS.cages)     || [];
+  species   = load(KEYS.species)   || defaultSpecies();
+  records   = load(KEYS.records)   || [];
+  ships     = load(KEYS.ships)     || [];
+  costs     = load(KEYS.costs)     || [];
+  inventory = load(KEYS.inventory) || [];
+  costItems = load(KEYS.costItems) || defaultCostItems();
+  settings  = load(KEYS.settings)  || defaultSettings();
+  oplog     = load(KEYS.oplog)     || [];
+  transfers = load(KEYS.transfers) || [];
+  grounds   = load(KEYS.grounds)   || defaultGrounds();
+  feedTypes = load(KEYS.feedTypes) || defaultFeedTypes();
+}
 
 // ─── 高速化キャッシュ・表示制御 ─────────────────────────────
 let fifoCache=null, fifoSig='';
@@ -1402,7 +2793,8 @@ function dataSig(){
   const invSig=inventory.reduce((s,i)=>s+Math.round((i.qty||0)*100)+Math.round(i.unitPrice||0),0);
   const costSig=costs.reduce((s,c)=>s+Math.round(c.amount||0)+(c.date?Number(c.date.replaceAll('-','')):0),0);
   const shipSig=ships.reduce((s,sh)=>s+Math.round(sh.amount||0)+(sh.date?Number(sh.date.replaceAll('-','')):0),0);
-  return [records.length,recSig,inventory.length,invSig,costs.length,costSig,ships.length,shipSig,settings.allocRule||'feed',activeCages().length].join('|');
+  const trSig=(transfers||[]).reduce((s,t)=>s+Math.round((t.count||0)*10)+Math.round((t.avgWeight||0)*1000)+(t.date?Number(t.date.replaceAll('-','')):0),0);
+  return [records.length,recSig,inventory.length,invSig,costs.length,costSig,ships.length,shipSig,(transfers||[]).length,trSig,grounds.length,feedTypes.length,settings.allocRule||'feed',settings.groundFilter||'',activeCages().length].join('|');
 }
 function monthKeyLocal(offset=0){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+offset); return fmtLocalDate(d).slice(0,7); }
 function monthLastDay(month){ const d=new Date(Number(month.slice(0,4)), Number(month.slice(5,7)), 0); return fmtLocalDate(d); }
@@ -1415,6 +2807,146 @@ function addLog(action,detail){
   if(oplog.length>500) oplog=oplog.slice(0,500);
   save(KEYS.oplog,oplog);
 }
+
+
+function setGroundFilter(v){
+  settings.groundFilter=v||'';
+  save(KEYS.settings,settings);
+  updateGroundSelectors();
+  renderDash();
+}
+function updateGroundSelectors(){
+  const val=settings.groundFilter||'';
+  if($('dashGroundFilter')) $('dashGroundFilter').innerHTML=groundOptions(val,'全漁場'), $('dashGroundFilter').value=val;
+  if($('recGroundFilter')) $('recGroundFilter').innerHTML=groundOptions(val,'全漁場'), $('recGroundFilter').value=val;
+}
+function onRecordGroundChange(){
+  settings.groundFilter=$('recGroundFilter').value||'';
+  save(KEYS.settings,settings);
+  updateCageSelectors();
+  renderRecWeek();
+}
+function updateCageSelectors(){
+  const ground=settings.groundFilter||'';
+  const cagesForRec=activeCages().filter(c=>cageInGround(c,ground));
+  if($('recCage')){
+    const cur=$('recCage').value;
+    $('recCage').innerHTML='<option value="">生簀を選択</option>'+cagesForRec.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    if(cagesForRec.some(c=>c.id===cur)) $('recCage').value=cur;
+  }
+  ['recFeedType1','recFeedType2','recFeedType3'].forEach((id,i)=>{ if($(id)) $(id).innerHTML=feedTypeOptions(i===0?'ft-common':'',i!==0); });
+}
+function collectFeedLines(){
+  const lines=[];
+  for(let i=1;i<=3;i++){
+    const ft=$(`recFeedType${i}`)?.value || (i===1?'ft-common':'');
+    const kg=parseFloat($(`recFeedKg${i}`)?.value)||0;
+    if(kg>0) lines.push({feedTypeId:ft||'ft-common',kg});
+  }
+  return lines;
+}
+function setFeedLineInputs(lines){
+  const arr=lines&&lines.length?lines:[];
+  for(let i=1;i<=3;i++){
+    const row=arr[i-1]||{};
+    if($(`recFeedType${i}`)) $('recFeedType'+i).value=row.feedTypeId|| (i===1?'ft-common':'');
+    if($(`recFeedKg${i}`)) $('recFeedKg'+i).value=row.kg||'';
+  }
+  if($('recFeed')) $('recFeed').value=arr.reduce((s,l)=>s+(Number(l.kg)||0),0)||'';
+  updateFeedLineVisibility();
+}
+
+function updateFeedLineVisibility(){
+  for(let i=1;i<=3;i++){
+    const line=$(`feedLine${i}`);
+    if(!line) continue;
+    const kg=parseFloat($(`recFeedKg${i}`)?.value)||0;
+    const hasSel=!!($(`recFeedType${i}`)?.value);
+    if(i===1 || kg>0 || (i>1 && hasSel && $(`recFeedType${i}`)?.value!=='')){
+      line.classList.add('active');
+    }else{
+      line.classList.remove('active');
+    }
+  }
+}
+function addFeedLine(){
+  for(let i=2;i<=3;i++){
+    const line=$(`feedLine${i}`);
+    if(line && !line.classList.contains('active')){
+      line.classList.add('active');
+      const sel=$(`recFeedType${i}`);
+      if(sel && !sel.value) sel.value='ft-common';
+      return;
+    }
+  }
+  toast('餌明細は3行まで入力できます');
+}
+
+function normalizeFeedLines(rec){
+  if(rec.feedLines && rec.feedLines.length) return rec.feedLines.map(l=>({feedTypeId:l.feedTypeId||'ft-common',kg:Number(l.kg)||0})).filter(l=>l.kg>0);
+  if(Number(rec.feed)>0) return [{feedTypeId:rec.feedTypeId||'ft-common',kg:Number(rec.feed)||0}];
+  return [];
+}
+
+
+function fmtComma(value, decimals=null){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return '0';
+  const hasDecimal=Math.abs(n-Math.trunc(n))>1e-9;
+  const d=decimals===null?(hasDecimal?1:0):decimals;
+  return n.toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function fmtKg(value, decimals=null){return fmtComma(value,decimals)+'kg';}
+function fmtMoney(value){return '¥'+fmtComma(Math.round(Number(value)||0),0);}
+function normalizeImportedData(){
+  if(!Array.isArray(grounds)||!grounds.length) grounds=defaultGrounds();
+  if(!Array.isArray(feedTypes)||!feedTypes.length) feedTypes=defaultFeedTypes();
+  if(!grounds.some(g=>g.id==='gr0')) grounds.unshift({id:'gr0',name:'未設定',active:true,builtin:true});
+  if(!feedTypes.some(f=>f.id==='ft-common')) feedTypes.unshift({id:'ft-common',name:'共通飼料',bagKg:20,bagPrice:0,active:true,builtin:true,priceHistory:[]});
+  cages=(cages||[]).map(c=>({...c,groundId:c.groundId||'gr0'}));
+  feedTypes=(feedTypes||[]).map(f=>({id:f.id||genId(),name:f.name||f.feedName||'餌',bagKg:Number(f.bagKg||f.packageKg||20),bagPrice:Number(f.bagPrice||f.pricePerBag||0),memo:f.memo||'',active:f.active!==false,builtin:!!f.builtin,priceHistory:Array.isArray(f.priceHistory)?f.priceHistory:[]}));
+  inventory=(inventory||[]).map(i=>{
+    const ftid=i.feedTypeId||i.feedId||'ft-common';
+    const ft=(feedTypes||[]).find(f=>f.id===ftid)||{};
+    const bagKg=Number(i.bagKg||ft.bagKg||20);
+    const bags=Number(i.bags||i.packageCount||((Number(i.qty)||0)/bagKg)||0);
+    const bagPrice=Number(i.bagPrice||i.pricePerBag||((Number(i.unitPrice)||0)*bagKg)||ft.bagPrice||0);
+    const qty=Number(i.qty||bags*bagKg||0);
+    const unitPrice=Number(i.unitPrice||((bagKg&&bagPrice)?bagPrice/bagKg:0));
+    return {...i,feedTypeId:ftid,name:i.name||ft.name||'餌',bags,bagKg,bagPrice,qty,unitPrice,amount:Number(i.amount||Math.round(bags*bagPrice)||0)};
+  });
+    ships=(ships||[]).map(normalizeShipRecord);
+  costs=(costs||[]).map(normalizeCostRecord);
+  records=(records||[]).map(r=>{
+    let lines=Array.isArray(r.feedLines)?r.feedLines:[];
+    if(!lines.length&&Number(r.feed)>0) lines=[{feedTypeId:r.feedTypeId||'ft-common',kg:Number(r.feed)||0}];
+    lines=lines.map(l=>({feedTypeId:l.feedTypeId||l.feedId||'ft-common',kg:Number(l.kg||l.feed||0)})).filter(l=>l.kg>0);
+    return {...r,feedLines:lines,feed:lines.reduce((s,l)=>s+(Number(l.kg)||0),0)};
+  });
+  save(KEYS.grounds,grounds);save(KEYS.feedTypes,feedTypes);save(KEYS.cages,cages);save(KEYS.inventory,inventory);save(KEYS.records,records);
+}
+function getCageCountOnDate(cageId,targetDate){
+  const c=(cages||[]).find(x=>x.id===cageId)||{};
+  let count=Number(c.count)||0;
+  (records||[]).filter(r=>r.cageId===cageId&&r.date<=targetDate).forEach(r=>{count-=Number(r.dead)||0;});
+  (ships||[]).filter(s=>s.cageId===cageId&&s.date<=targetDate).forEach(s=>{count-=Number(s.count)||0;});
+  (transfers||[]).filter(t=>t.date<=targetDate).forEach(t=>{
+    if(t.fromCageId===cageId) count-=Number(t.count)||0;
+    if(t.toCageId===cageId) count+=Number(t.count)||0;
+  });
+  return Math.max(0,count);
+}
+
+
+function fmtSmart(value, maxDecimals=1){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return '0';
+  const abs=Math.abs(n);
+  let d=0;
+  if(Math.abs(n-Math.trunc(n))>1e-9) d=maxDecimals;
+  return n.toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function fmtKgSmart(value, maxDecimals=1){return fmtSmart(value,maxDecimals)+'kg';}
 
 // ─── ページ切替 ───────────────────────────────────────────
 const PAGE_TITLES={dash:'ダッシュボード',record:'日次記録',ship:'出荷',cost:'原価',pl:'損益',settings:'設定'};
@@ -1431,20 +2963,34 @@ function showPage(name){
                 cost:`<button class="btn btn-primary btn-sm" onclick="openCostModal()">コストを入力</button>`};
     act.innerHTML=btns[name]||'';
   }
-  if(name==='dash')     renderDash();
+  if(name==='dash')     { updateGroundSelectors(); renderDash(); }
   if(name==='record')   initRecord();
   if(name==='ship')     renderShip();
   if(name==='cost')     renderCost();
   if(name==='pl')       { if(!$('plFrom').value && !$('plTo').value) setPLPeriod('thisMonth', true); renderPL(curPLTab); }
-  if(name==='settings') renderSettings(curSetTab);
+  if(name==='settings'){ renderSettings(curSetTab); updateSyncStatusBox(); }
 }
 
 // ─── ヘルパー ─────────────────────────────────────────────
 const getCage    = id => cages.find(c=>c.id===id)||{};
 const getSpecies = id => species.find(s=>s.id===id)||{};
+const getGround = id => grounds.find(g=>g.id===id)||{};
+const getFeedType = id => feedTypes.find(f=>f.id===id)||{};
 const isActive = x => x && x.active !== false;
 const activeCages = () => cages.filter(isActive);
 const activeSpecies = () => species.filter(isActive);
+const activeGrounds = () => grounds.filter(isActive);
+const activeFeedTypes = () => feedTypes.filter(isActive);
+function selectedGroundId(){ return settings.groundFilter||''; }
+function cageInGround(c,groundId=selectedGroundId()){ return !groundId || c.groundId===groundId || (!c.groundId && groundId==='gr0'); }
+function filteredCages(){ return activeCages().filter(c=>cageInGround(c)); }
+function feedTypeName(id){ return getFeedType(id).name || '共通飼料'; }
+function feedTypeOptions(selected='',withBlank=false){
+  return (withBlank?'<option value="">選択...</option>':'') + activeFeedTypes().map(f=>`<option value="${f.id}"${selected===f.id?' selected':''}>${f.name}</option>`).join('');
+}
+function groundOptions(selected='',allLabel='全漁場'){
+  return `<option value="">${allLabel}</option>` + activeGrounds().map(g=>`<option value="${g.id}"${selected===g.id?' selected':''}>${g.name}</option>`).join('');
+}
 const feedCostItemNames = ['配合飼料','生餌','飼料費','えさ代','餌代'];
 const isFeedCostItem = item => !!item && item.type === 'direct' && feedCostItemNames.some(n => String(item.name||'').includes(n));
 const activeCostItems = () => costItems.filter(x => isActive(x) && !isFeedCostItem(x));
@@ -1463,32 +3009,45 @@ function getLiving(cageId, upToDate){
   const init=cage.count||0;
   const deaths=records.filter(r=>r.cageId===cageId&&r.date<=dt&&r.dead>0).reduce((s,r)=>s+(r.dead||0),0);
   const shipped=ships.filter(s=>s.cageId===cageId&&s.date<=dt).reduce((s,sh)=>s+(sh.count||0),0);
-  return Math.max(0,init-deaths-shipped);
+  const inCnt=(transfers||[]).filter(t=>t.toCageId===cageId&&t.date<=dt).reduce((s,t)=>s+(Number(t.count)||0),0);
+  const outCnt=(transfers||[]).filter(t=>t.fromCageId===cageId&&t.date<=dt).reduce((s,t)=>s+(Number(t.count)||0),0);
+  return Math.max(0,init+inCnt-outCnt-deaths-shipped);
+}
+function getTransferWeight(cageId, from, to, dir){
+  return (transfers||[]).filter(t=>{
+    const hit=dir==='in' ? t.toCageId===cageId : t.fromCageId===cageId;
+    return hit && (!from||t.date>from) && (!to||t.date<=to);
+  }).reduce((s,t)=>s+(Number(t.weight)||((Number(t.count)||0)*(Number(t.avgWeight)||0))),0);
 }
 
 // ─── FIFO計算 ─────────────────────────────────────────────
 function calcFifo(){
-  const sig=records.length+'|'+inventory.length+'|'+records.reduce((s,r)=>s+Math.round((r.feed||0)*100)+(r.date?Number(r.date.replaceAll('-','')):0),0)+'|'+inventory.reduce((s,i)=>s+Math.round((i.qty||0)*100)+Math.round(i.unitPrice||0),0);
+  const sig=records.length+'|'+inventory.length+'|'+records.reduce((s,r)=>s+normalizeFeedLines(r).reduce((a,l)=>a+Math.round((l.kg||0)*100)+(l.feedTypeId||'').length,0)+(r.date?Number(r.date.replaceAll('-','')):0),0)+'|'+inventory.reduce((s,i)=>s+Math.round((i.qty||0)*100)+Math.round(i.unitPrice||0)+(i.feedTypeId||'').length,0);
   if(fifoCache && fifoSig===sig) return fifoCache;
   const lots=[...inventory].sort((a,b)=>a.date.localeCompare(b.date))
-    .map(inv=>({...inv,consumed:0,remaining:inv.qty}));
+    .map(inv=>({...inv,feedTypeId:inv.feedTypeId||'ft-common',consumed:0,remaining:Number(inv.qty)||0}));
   const recs=[...records].sort((a,b)=>a.date.localeCompare(b.date));
   const consumptions=[];
   for(const rec of recs){
-    if(!rec.feed||rec.feed<=0) continue;
-    let rem=rec.feed, cost=0, totalQ=0;
-    for(const lot of lots){
-      if(rem<=0) break; if(lot.remaining<=0) continue;
-      const use=Math.min(lot.remaining,rem);
-      lot.consumed+=use; lot.remaining-=use; rem-=use;
-      cost+=Math.round(use*lot.unitPrice); totalQ+=use;
+    const lines=normalizeFeedLines(rec);
+    for(const line of lines){
+      if(!line.kg||line.kg<=0) continue;
+      let rem=line.kg, cost=0, totalQ=0;
+      for(const lot of lots){
+        if(rem<=0) break;
+        if(lot.feedTypeId !== (line.feedTypeId||'ft-common')) continue;
+        if(lot.remaining<=0) continue;
+        const use=Math.min(lot.remaining,rem);
+        lot.consumed+=use; lot.remaining-=use; rem-=use;
+        cost+=Math.round(use*(Number(lot.unitPrice)||0)); totalQ+=use;
+      }
+      consumptions.push({date:rec.date,cageId:rec.cageId,feedTypeId:line.feedTypeId||'ft-common',feed:line.kg,cost,
+        avgPrice:totalQ>0?Math.round(cost/totalQ):0,shortage:Math.max(0,line.kg-totalQ)});
     }
-    consumptions.push({date:rec.date,cageId:rec.cageId,feed:rec.feed,cost,
-      avgPrice:totalQ>0?Math.round(cost/totalQ):0,shortage:Math.max(0,rec.feed-totalQ)});
   }
   fifoCache={lots,consumptions,
     totalStock:lots.reduce((s,l)=>s+l.remaining,0),
-    totalValue:lots.reduce((s,l)=>s+l.remaining*l.unitPrice,0)};
+    totalValue:lots.reduce((s,l)=>s+l.remaining*(Number(l.unitPrice)||0),0)};
   fifoSig=sig;
   return fifoCache;
 }
@@ -1549,6 +3108,11 @@ function getMeasurements(cageId){
     const avg=Number(r.avgWeight)||0;
     list.push({date:r.date, avgWeight:avg, living, biomass:living*avg, base:false, measureCount:r.measureCount||0});
   });
+  (transfers||[]).filter(t=>(t.fromCageId===cageId||t.toCageId===cageId) && Number(t.avgWeight)>0).forEach(t=>{
+    const living=getLiving(cageId,t.date);
+    const avg=Number(t.avgWeight)||0;
+    list.push({date:t.date, avgWeight:avg, living, biomass:living*avg, base:t.toCageId===cageId, transfer:true, measureCount:t.count||0});
+  });
   return list.sort((a,b)=>a.date.localeCompare(b.date));
 }
 function getLatestMeasurement(cageId,toDate){
@@ -1562,9 +3126,11 @@ function getFCR(cageId,toDate){
   if(!cur.avgWeight || !prev.avgWeight) return null;
   const feed=records.filter(r=>r.cageId===cageId && r.date>prev.date && r.date<=cur.date).reduce((s,r)=>s+(Number(r.feed)||0),0);
   const shipped=ships.filter(s=>s.cageId===cageId && s.date>prev.date && s.date<=cur.date).reduce((a,s)=>a+(Number(s.weight)||0),0);
-  const gain=cur.biomass - prev.biomass + shipped;
-  if(gain<=0 || feed<=0) return {fcr:null, feed, gain, shipped, cur, prev};
-  return {fcr:feed/gain, feed, gain, shipped, cur, prev};
+  const transferOut=getTransferWeight(cageId, prev.date, cur.date, 'out');
+  const transferIn =getTransferWeight(cageId, prev.date, cur.date, 'in');
+  const gain=cur.biomass - prev.biomass + shipped + transferOut - transferIn;
+  if(gain<=0 || feed<=0) return {fcr:null, feed, gain, shipped, transferOut, transferIn, cur, prev};
+  return {fcr:feed/gain, feed, gain, shipped, transferOut, transferIn, cur, prev};
 }
 function fmtFCR(v){ return (v&&v.fcr)?v.fcr.toFixed(2):'—'; }
 function fcrColor(v){
@@ -1575,7 +3141,7 @@ function fcrColor(v){
   return 'var(--danger)';
 }
 function getAverageFCR(){
-  const vals=activeCages().map(c=>getFCR(c.id)).filter(x=>x&&x.fcr);
+  const vals=filteredCages().map(c=>getFCR(c.id)).filter(x=>x&&x.fcr);
   if(!vals.length) return null;
   const feed=vals.reduce((s,x)=>s+x.feed,0), gain=vals.reduce((s,x)=>s+x.gain,0);
   return gain>0?feed/gain:null;
@@ -1598,12 +3164,12 @@ function renderDash(){
   $('dashKPI').innerHTML=`
     <div class="kpi k-aqua">
       <div class="kpi-label">本日の給餌量</div>
-      <div class="kpi-val">${totalFeed>0?totalFeed.toFixed(1):'—'}<span style="font-size:14px;font-weight:400;margin-left:3px">kg</span></div>
+      <div class="kpi-val">${totalFeed>0?fmtSmart(totalFeed,1):'—'}<span style="font-size:14px;font-weight:400;margin-left:3px">kg</span></div>
       <div class="kpi-sub">全生簀合計</div>
     </div>
     <div class="kpi ${totalDead>0?'k-danger':'k-blue'}">
       <div class="kpi-label">本日の死亡</div>
-      <div class="kpi-val">${totalDead}<span style="font-size:14px;font-weight:400;margin-left:3px">尾</span></div>
+      <div class="kpi-val">${fmtSmart(totalDead,0)}<span style="font-size:14px;font-weight:400;margin-left:3px">尾</span></div>
       <div class="kpi-sub">${totalDead>0?'⚠ 要確認':'異常なし'}</div>
     </div>
     <div class="kpi k-gold">
@@ -1613,7 +3179,7 @@ function renderDash(){
     </div>
     <div class="kpi k-ok">
       <div class="kpi-label">総飼育尾数</div>
-      <div class="kpi-val">${fmtNum(totalLiving)}<span style="font-size:14px;font-weight:400;margin-left:3px">尾</span></div>
+      <div class="kpi-val">${fmtSmart(totalLiving,0)}<span style="font-size:14px;font-weight:400;margin-left:3px">尾</span></div>
       <div class="kpi-sub">${avgFcr?`平均FCR ${avgFcr.toFixed(2)}`:(avgTemp?`平均水温 ${avgTemp}℃`:'水温未記録')}</div>
     </div>`;
 
@@ -1621,12 +3187,12 @@ function renderDash(){
   if(!activeCages().length){
     $('dashCageCards').innerHTML=`<div style="text-align:center;padding:24px;color:var(--tx-m);grid-column:1/-1">生簀が登録されていません<br><button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="showPage('settings');renderSettings('cages')">生簀を追加</button></div>`;
   } else {
-    $('dashCageCards').innerHTML=activeCages().map(cage=>{
+    $('dashCageCards').innerHTML=filteredCages().map(cage=>{
       const sp=cageCurrentSpecies(cage).name||'—';
       const rec=records.find(r=>r.cageId===cage.id&&r.date===td);
       const living=getLiving(cage.id);
       const rate=cage.count?Math.round(living/cage.count*100):0;
-      const feedTxt=rec?.feed?rec.feed+'kg':'未入力';
+      const feedTxt=rec?.feed?fmtSmart(rec.feed,1)+'kg':'未入力';
       const feedColor=rec?.feed?'var(--tx)':'var(--warn)';
       const deadTxt=rec?.dead>0?rec.dead+'尾':'0尾';
       const deadColor=rec?.dead>0?'var(--danger)':'var(--tx)';
@@ -1641,8 +3207,8 @@ function renderDash(){
         <div class="dash-cage-grid">
           <div class="dash-cage-metric"><div class="m-label">現在尾数</div><div class="m-val">${fmtNum(living)}尾</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">生残率 ${rate}%</div></div>
           <div class="dash-cage-metric"><div class="m-label">給餌</div><div class="m-val" style="color:${feedColor}">${feedTxt}</div></div>
-          <div class="dash-cage-metric"><div class="m-label">平均体重</div><div class="m-val">${meas?meas.avgWeight.toFixed(2)+'kg':'—'}</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">${biomass?`在池 ${fmtNum(biomass)}kg`:'測量未登録'}</div></div>
-          <div class="dash-cage-metric fcr-metric"><div class="m-label">増肉係数</div><div class="m-val" style="color:${fcrColor(fcr)}">${fmtFCR(fcr)}</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">${fcr?.gain?`増重量 ${Math.round(fcr.gain)}kg`:''}</div></div>
+          <div class="dash-cage-metric"><div class="m-label">平均体重</div><div class="m-val">${meas?fmtKgSmart(meas.avgWeight,2):'—'}</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">${biomass?`在池 ${fmtSmart(biomass,0)}kg`:'測量未登録'}</div></div>
+          <div class="dash-cage-metric fcr-metric"><div class="m-label">増肉係数</div><div class="m-val" style="color:${fcrColor(fcr)}">${fmtFCR(fcr)}</div><div style="font-size:11px;color:var(--tx-m);margin-top:2px">${fcr?.gain?`増重量 ${fmtSmart(fcr.gain,0)}kg`:''}</div></div>
           <div class="dash-cage-metric"><div class="m-label">死亡</div><div class="m-val" style="color:${deadColor}">${deadTxt}</div></div>
           <div class="dash-cage-metric"><div class="m-label">水温</div><div class="m-val">${rec?.temp?rec.temp+'℃':'—'}</div></div>
         </div>
@@ -1662,8 +3228,8 @@ function renderDash(){
   if(fifo.totalStock<50){
     const daysLeft=avgDailyFeed>0?Math.floor(fifo.totalStock/avgDailyFeed):null;
     const msg=daysLeft!==null
-      ? `飼料在庫：残り${fifo.totalStock.toFixed(0)}kg／約${daysLeft}日分（要発注）`
-      : `飼料在庫：残り${fifo.totalStock.toFixed(0)}kg（要発注）`;
+      ? `飼料在庫：残り${fmtSmart(fifo.totalStock,0)}kg／約${daysLeft}日分（要発注）`
+      : `飼料在庫：残り${fmtSmart(fifo.totalStock,0)}kg（要発注）`;
     alerts.push({type:'danger',msg});
   }
   $('dashAlerts').innerHTML=alerts.length
@@ -1732,7 +3298,7 @@ function copyLastRecord(){
   const last=getLast(records, r=>!cageId || r.cageId===cageId);
   if(!last){toast('コピーできる前回記録がありません');return;}
   if(!cageId) $('recCage').value=last.cageId;
-  $('recFeed').value=last.feed||''; $('recDead').value=last.dead||''; $('recTemp').value=last.temp||'';
+  setFeedLineInputs(normalizeFeedLines(last)); $('recDead').value=last.dead||''; $('recTemp').value=last.temp||'';
   $('recMed').value=last.med||'0'; $('recWeather').value=last.weather||'';
   $('recAvgWeight').value=last.avgWeight||''; $('recMeasureCount').value=last.measureCount||'';
   $('recNote').value=last.note||''; $('recWorkNote').value=last.workNote||''; $('recWorkCat').value=last.workCat||'';
@@ -1760,13 +3326,14 @@ function copyLastCost(){
 
 // ─── 日次記録 ─────────────────────────────────────────────
 function initRecord(){
+  updateGroundSelectors();
+  updateCageSelectors();
   const sel=$('recCage');
-  sel.innerHTML='<option value="">生簀を選択</option>'+
-    activeCages().map(c=>`<option value="${c.id}">${c.name}（${cageCurrentSpecies(c).name||'—'}）</option>`).join('');
   $('recDate').value=today();
-  const last=getLast(records); if(last?.cageId) sel.value=last.cageId;
+  const last=getLast(records, r=>!settings.groundFilter || cageInGround(getCage(r.cageId), settings.groundFilter));
+  if(last?.cageId && [...sel.options].some(o=>o.value===last.cageId)) sel.value=last.cageId;
   $('recExistAlert').style.display='none';
-  ['recFeed','recDead','recTemp','recAvgWeight','recMeasureCount','recNote','recWorkNote'].forEach(id=>$(id).value='');
+  setFeedLineInputs([]); ['recDead','recTemp','recAvgWeight','recMeasureCount','recNote','recWorkNote'].forEach(id=>$(id).value='');
   $('recMed').value='0'; $('recWeather').value=''; $('recWorkCat').value='';
   renderRecWeek();
 }
@@ -1775,13 +3342,13 @@ function loadExistingRecord(){
   if(!cageId||!date) return;
   const rec=records.find(r=>r.cageId===cageId&&r.date===date);
   if(rec){
-    $('recFeed').value=rec.feed||''; $('recDead').value=rec.dead||''; $('recTemp').value=rec.temp||'';
+    setFeedLineInputs(normalizeFeedLines(rec)); $('recDead').value=rec.dead||''; $('recTemp').value=rec.temp||'';
     $('recMed').value=rec.med||'0'; $('recWeather').value=rec.weather||'';
     $('recAvgWeight').value=rec.avgWeight||''; $('recMeasureCount').value=rec.measureCount||'';
     $('recNote').value=rec.note||''; $('recWorkNote').value=rec.workNote||''; $('recWorkCat').value=rec.workCat||'';
     $('recExistAlert').style.display='';
   } else {
-    ['recFeed','recDead','recTemp','recAvgWeight','recMeasureCount','recNote','recWorkNote'].forEach(id=>$(id).value='');
+    setFeedLineInputs([]); ['recDead','recTemp','recAvgWeight','recMeasureCount','recNote','recWorkNote'].forEach(id=>$(id).value='');
     $('recMed').value='0'; $('recWeather').value=''; $('recWorkCat').value='';
     $('recExistAlert').style.display='none';
   }
@@ -1790,17 +3357,19 @@ function saveRecord(){
   const cageId=$('recCage').value, date=$('recDate').value;
   if(!cageId){toast('生簀を選択してください');return;}
   if(!date){toast('日付を入力してください');return;}
+  const feedLines=collectFeedLines();
   const payload={id:genId(),cageId,date,
-    feed:parseFloat($('recFeed').value)||0, dead:parseInt($('recDead').value)||0,
+    feed:feedLines.reduce((s,l)=>s+(Number(l.kg)||0),0), feedLines, dead:parseInt($('recDead').value)||0,
     temp:parseFloat($('recTemp').value)||0, med:parseInt($('recMed').value)||0,
     weather:$('recWeather').value, avgWeight:parseFloat($('recAvgWeight').value)||0, measureCount:parseInt($('recMeasureCount').value)||0, note:$('recNote').value,
     workNote:$('recWorkNote').value, workCat:$('recWorkCat').value,
     updatedAt:new Date().toISOString()};
+  pushUndo('測量・給餌記録');
   const idx=records.findIndex(r=>r.cageId===cageId&&r.date===date);
   if(idx>=0){payload.id=records[idx].id;records[idx]=payload;}else records.unshift(payload);
   save(KEYS.records,records);
   addLog('記録保存',`${date} ${getCage(cageId).name||''}`);
-  toast('記録を保存しました'); renderRecWeek(); $('recExistAlert').style.display='';
+  renderRecWeek(); $('recExistAlert').style.display=''; showUndoToast();
 }
 function renderRecWeek(){
   const cageId=$('recCage')?.value;
@@ -1809,7 +3378,7 @@ function renderRecWeek(){
   tbody.innerHTML=recs.length?recs.map(r=>`<tr>
     <td>${fmtDate(r.date)}</td>
     <td>${getCage(r.cageId).name||'—'}</td>
-    <td>${r.feed||'—'}</td>
+    <td>${normalizeFeedLines(r).length?normalizeFeedLines(r).map(l=>`${feedTypeName(l.feedTypeId)} ${fmtSmart(l.kg,1)}kg`).join('<br>'):'—'}</td>
     <td>${r.dead>0?`<span style="color:var(--danger)">${r.dead}</span>`:'0'}</td>
     <td>${r.temp||'—'}</td>
     <td>${r.avgWeight?Number(r.avgWeight).toFixed(2)+'kg':'—'}</td>
@@ -1822,7 +3391,8 @@ function renderRecWeek(){
 }
 function deleteRecord(id){
   confirmDlg('記録を削除','この記録を削除しますか？','削除する',()=>{
-    records=records.filter(r=>r.id!==id);save(KEYS.records,records);renderRecWeek();toast('削除しました');
+    pushUndo('測量・給餌記録の削除');
+    records=records.filter(r=>r.id!==id);save(KEYS.records,records);renderRecWeek();showUndoToast();
   });
 }
 
@@ -1852,16 +3422,18 @@ function saveShip(){
   const payload={id:$('shipId').value||genId(),date:$('shipDate').value,cageId,
     dest:$('shipDest').value,count:parseInt($('shipCount').value)||0,
     weight:parseFloat($('shipWeight').value)||0,price:parseFloat($('shipPrice').value)||0,
-    amount,note:$('shipNote').value};
+    amount,note:$('shipNote').value,updatedAt:new Date().toISOString()};
+  pushUndo('出荷記録');
   const idx=ships.findIndex(s=>s.id===payload.id);
   if(idx>=0) ships[idx]=payload; else ships.unshift(payload);
   save(KEYS.ships,ships);
   addLog('出荷登録',`${payload.date} ${getCage(cageId).name||''} ¥${fmtNum(amount)}`);
-  closeModal('shipModal'); toast('出荷を登録しました'); renderShip();
+  closeModal('shipModal'); renderShip(); showUndoToast();
 }
 function deleteShip(id){
   confirmDlg('出荷記録を削除','この出荷記録を削除しますか？','削除する',()=>{
-    ships=ships.filter(s=>s.id!==id);save(KEYS.ships,ships);renderShip();toast('削除しました');
+    pushUndo('出荷記録の削除');
+    ships=ships.filter(s=>s.id!==id);save(KEYS.ships,ships);renderShip();showUndoToast();
   });
 }
 function renderShipTable(){
@@ -1869,6 +3441,7 @@ function renderShipTable(){
   const cardBox=$('shipCardList');
   const list=[...ships].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);
   const rows=list.map(s=>{
+    s=normalizeShipRecord(s);
     const cage=getCage(s.cageId);
     const sp=cageCurrentSpecies(cage,s.date).name||'—';
     const dest=shortText(s.dest||'—',10);
@@ -1995,16 +3568,18 @@ function saveCost(){
   if(isFeedCostItem(item)){toast('飼料費は「仕入」タブから登録してください');return;}
   const payload={id:$('costId').value||genId(),date:$('costDate').value,
     cageId:item?.type==='indirect'?null:($('costCage').value||null),
-    itemId,amount,type:item?.type||'direct',note:$('costNote').value};
+    itemId,amount,type:item?.type||'direct',note:$('costNote').value,updatedAt:new Date().toISOString()};
+  pushUndo('コスト記録');
   const idx=costs.findIndex(c=>c.id===payload.id);
   if(idx>=0) costs[idx]=payload; else costs.unshift(payload);
   save(KEYS.costs,costs);
   addLog('コスト登録',`${payload.date} ${item?.name||''} ¥${fmtNum(amount)}`);
-  closeModal('costModal'); toast('コストを登録しました'); renderCost();
+  closeModal('costModal'); renderCost(); showUndoToast();
 }
 function deleteCost(id){
   confirmDlg('コストを削除','このコスト記録を削除しますか？','削除する',()=>{
-    costs=costs.filter(c=>c.id!==id);save(KEYS.costs,costs);renderCost();toast('削除しました');
+    pushUndo('コスト記録の削除');
+    costs=costs.filter(c=>c.id!==id);save(KEYS.costs,costs);renderCost();showUndoToast();
   });
 }
 function renderCostTable(){
@@ -2043,7 +3618,7 @@ function renderCostHistory(){
   const area=$('costHistoryArea'); if(!area) return;
   if(kind==='feed'){
     const fifo=calcFifo();
-    area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>仕入日</th><th>品名</th><th>仕入量</th><th>単価</th><th>残量</th><th>状態</th></tr></thead><tbody>${fifo.lots.slice(0,costHistoryLimit).map(l=>`<tr><td>${fmtDate(l.date)}</td><td>${l.name}</td><td>${l.qty.toFixed(1)}kg</td><td>¥${fmtNum(l.unitPrice)}/kg</td><td>${l.remaining.toFixed(1)}kg</td><td>${l.remaining<=0?'消費済':l.remaining<l.qty*.2?'残少':'在庫あり'}</td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">仕入記録がありません</td></tr>`}</tbody></table></div>${fifo.lots.length>costHistoryLimit?`<button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="showMoreCostHistory()">さらに表示（${costHistoryLimit}/${fifo.lots.length}件）</button>`:''}`;
+    area.innerHTML=`<div class="table-wrap"><table><thead><tr><th>仕入日</th><th>品名</th><th>仕入量</th><th>単価</th><th>残量</th><th>状態</th></tr></thead><tbody>${fifo.lots.slice(0,costHistoryLimit).map(l=>`<tr><td>${fmtDate(l.date)}</td><td>${feedTypeName(l.feedTypeId)||l.name}</td><td>${l.bags?l.bags+'袋 / ':''}${l.qty.toFixed(1)}kg</td><td>${l.bagPrice?'¥'+fmtNum(l.bagPrice)+'/袋':'¥'+fmtNum(l.unitPrice)+'/kg'}</td><td>${l.remaining.toFixed(1)}kg</td><td>${l.remaining<=0?'消費済':l.remaining<l.qty*.2?'残少':'在庫あり'}</td></tr>`).join('')||`<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">仕入記録がありません</td></tr>`}</tbody></table></div>${fifo.lots.length>costHistoryLimit?`<button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="showMoreCostHistory()">さらに表示（${costHistoryLimit}/${fifo.lots.length}件）</button>`:''}`;
     return;
   }
   const q=($('costSearchText')?.value||'').trim();
@@ -2079,24 +3654,44 @@ function renderFeedInventory(){
   :`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--tx-m)">仕入記録がありません</td></tr>`;
 }
 function openFeedModal(){
-  $('feedDate').value=today();$('feedName').value='';$('feedQty').value='';$('feedUnitPrice').value='';$('feedAmount').value='';
+  $('feedDate').value=today();
+  if($('feedType')) $('feedType').innerHTML=feedTypeOptions(activeFeedTypes()[0]?.id||'ft-common');
+  onFeedTypeChange();
+  $('feedBags').value=''; $('feedAmount').value=''; $('feedQty').value=''; $('feedUnitPrice').value='';
   openModal('feedModal');
 }
-function calcFeedAmt(){const q=parseFloat($('feedQty').value)||0,p=parseFloat($('feedUnitPrice').value)||0;$('feedAmount').value=q&&p?Math.round(q*p):'';}
+function onFeedTypeChange(){
+  const f=getFeedType($('feedType')?.value);
+  if($('feedBagKg')) $('feedBagKg').value=f.bagKg||20;
+  if($('feedBagPrice')) $('feedBagPrice').value=f.bagPrice||'';
+  calcFeedAmt();
+}
+function calcFeedAmt(){
+  const bags=parseFloat($('feedBags')?.value)||0, bagPrice=parseFloat($('feedBagPrice')?.value)||0, bagKg=parseFloat($('feedBagKg')?.value)||20;
+  const qty=bags*bagKg, amount=bags*bagPrice, unit=bagKg?bagPrice/bagKg:0;
+  if($('feedQty')) $('feedQty').value=qty?qty.toFixed(1):'';
+  if($('feedUnitPrice')) $('feedUnitPrice').value=unit?Math.round(unit):'';
+  if($('feedAmount')) $('feedAmount').value=amount?Math.round(amount):'';
+}
 function saveFeed(){
-  const qty=parseFloat($('feedQty').value)||0, unitPrice=parseFloat($('feedUnitPrice').value)||0;
-  if(!qty||!unitPrice){toast('数量と単価を入力してください');return;}
-  inventory.unshift({id:genId(),date:$('feedDate').value,name:$('feedName').value||'餌',qty,unitPrice,amount:Math.round(qty*unitPrice)});
-  save(KEYS.inventory,inventory);closeModal('feedModal');toast('仕入を登録しました'); if(curPage==='cost') renderCost(); else renderFeedInventory();
+  const feedTypeId=$('feedType')?.value||'ft-common';
+  const ft=getFeedType(feedTypeId);
+  const bags=parseFloat($('feedBags')?.value)||0, bagPrice=parseFloat($('feedBagPrice')?.value)||0, bagKg=parseFloat($('feedBagKg')?.value)||20;
+  const qty=bags*bagKg, unitPrice=bagKg?bagPrice/bagKg:0, amount=Math.round(bags*bagPrice);
+  if(!feedTypeId||!bags||!bagPrice){toast('餌種類・袋数・袋単価を入力してください');return;}
+  pushUndo('飼料仕入');
+  inventory.unshift({id:genId(),date:$('feedDate').value,feedTypeId,name:ft.name||'餌',bags,bagPrice,bagKg,qty,unitPrice,amount,updatedAt:new Date().toISOString()});
+  save(KEYS.inventory,inventory);closeModal('feedModal'); if(curPage==='cost') renderCost(); else renderFeedInventory(); showUndoToast();
 }
 function delFeedInv(id){
   confirmDlg('仕入記録を削除','この仕入記録を削除しますか？','削除する',()=>{
-    inventory=inventory.filter(x=>x.id!==id);save(KEYS.inventory,inventory); if(curPage==='cost') renderCost(); else renderFeedInventory();toast('削除しました');
+    pushUndo('飼料仕入の削除');
+    inventory=inventory.filter(x=>x.id!==id);save(KEYS.inventory,inventory); if(curPage==='cost') renderCost(); else renderFeedInventory();showUndoToast();
   });
 }
 
 // ─── 損益 ─────────────────────────────────────────────────
-let plChartInst=null, plPieInst=null;
+let plChartInst=null, plPieInst=null, plFcrChartInst=null;
 let plDirty=true, plLastCalcKey='';
 function currentPLKey(){return (($('plFrom')?.value||'')+'|'+($('plTo')?.value||'')+'|'+dataSig());}
 function invalidatePLCache(){plDirty=true; const st=$('plCalcStatus'); if(st) st.textContent='集計未更新';}
@@ -2175,13 +3770,33 @@ function renderAllocDetailBox(targetId,from,to){
     </tbody></table></div>
   </details>`;
 }
+
+function showPLPane(tab){
+  document.querySelectorAll('.pl-pane').forEach(el=>el.style.display='none');
+  const pane=$('pl-'+tab); if(pane) pane.style.display='';
+  document.querySelectorAll('.pl-tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));
+  const plSel=$('plMenuSelect'); if(plSel && plSel.value!==tab) plSel.value=tab;
+}
+
 function renderPL(tab, force=false){
   curPLTab=tab;
   document.querySelectorAll('.pl-tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));
   const plSel=$('plMenuSelect'); if(plSel && plSel.value!==tab) plSel.value=tab;
+  const from=$('plFrom')?.value||null, to=$('plTo')?.value||null;
+  const notice=$('plLazyNotice');
+
+  // FCR推移は損益集計キャッシュに依存しないため、集計更新待ちにしない。
+  if(tab==='fcrtrend'){
+    if(notice) notice.style.display='none';
+    document.querySelectorAll('.pl-pane').forEach(el=>el.style.display='none');
+    const pane=$('pl-fcrtrend'); if(pane) pane.style.display='';
+    renderPLFcrTrend(from,to);
+    const st=$('plCalcStatus'); if(st) st.textContent='FCR推移を表示中';
+    return;
+  }
+
   document.querySelectorAll('.pl-pane').forEach(el=>el.style.display='none');
   const pane=$('pl-'+tab); if(pane) pane.style.display='';
-  const notice=$('plLazyNotice');
   const key=currentPLKey();
   if((plDirty || plLastCalcKey!==key) && !force){
     if(notice) notice.style.display='';
@@ -2190,7 +3805,6 @@ function renderPL(tab, force=false){
     return;
   }
   if(notice) notice.style.display='none';
-  const from=$('plFrom')?.value||null, to=$('plTo')?.value||null;
   if(tab==='summary')   renderPLSummary(from,to);
   if(tab==='cage')      renderPLCage(from,to);
   if(tab==='species')   renderPLSpecies(from,to);
@@ -2317,6 +3931,84 @@ function renderPLTrend(from,to){
     }
   });
 }
+
+
+
+function getFCRSeries(cageId,from,to){
+  const arr=(records||[]).filter(r=>r.cageId===cageId&&Number(r.avgWeight)>0&&(!to||r.date<=to)).map(r=>{
+    const count=typeof getCageCountOnDate==='function'?getCageCountOnDate(cageId,r.date):(Number((cages.find(c=>c.id===cageId)||{}).count)||0);
+    const biomass=count*Number(r.avgWeight||0);
+    return {date:r.date,avgWeight:Number(r.avgWeight||0),measureCount:Number(r.measureCount||0),count,biomass};
+  }).sort((a,b)=>a.date.localeCompare(b.date));
+  const out=[];
+  for(let i=0;i<arr.length;i++){
+    const cur=arr[i],prev=arr[i-1];
+    if(from&&cur.date<from) continue;
+    if(!prev){out.push({cageId,date:cur.date,prevDate:'開始',fcr:null,feed:0,gain:null,shipped:0,transferOut:0,transferIn:0,prev:null,cur});continue;}
+    const feed=(records||[]).filter(r=>r.cageId===cageId&&r.date>prev.date&&r.date<=cur.date).reduce((s,r)=>s+normalizeFeedLines(r).reduce((a,l)=>a+(Number(l.kg)||0),0),0);
+    const shipped=(ships||[]).filter(s=>s.cageId===cageId&&s.date>prev.date&&s.date<=cur.date).reduce((a,s)=>a+(Number(s.weight)||0),0);
+    const transferOut=typeof getTransferWeight==='function'?getTransferWeight(cageId,prev.date,cur.date,'out'):0;
+    const transferIn=typeof getTransferWeight==='function'?getTransferWeight(cageId,prev.date,cur.date,'in'):0;
+    const gain=cur.biomass-prev.biomass+shipped+transferOut-transferIn;
+    const fcr=(gain>0&&feed>0)?feed/gain:null;
+    out.push({cageId,date:cur.date,prevDate:prev.date,fcr,feed,gain,shipped,transferOut,transferIn,prev,cur});
+  }
+  return out;
+}
+
+function renderPLFcrTrend(from,to){
+  const notice=$('plLazyNotice'); if(notice) notice.style.display='none';
+  document.querySelectorAll('.pl-pane').forEach(el=>el.style.display='none');
+  const pane=$('pl-fcrtrend'); if(pane) pane.style.display='';
+  const rows=[];
+  activeCages().forEach(c=>{
+    const series=getFCRSeries(c.id,from,to);
+    series.forEach(r=>rows.push({cage:c,...r}));
+  });
+  const validRows=rows.filter(r=>r.fcr!==null&&Number.isFinite(r.fcr));
+  const labels=[...new Set(validRows.map(r=>r.date))].sort();
+  if(plFcrChartInst){plFcrChartInst.destroy();plFcrChartInst=null;}
+  const canvas=$('plFcrTrendChart');
+  const colors=['#3AB5A0','#2B7BB9','#C9962A','#C0392B','#7E57C2','#607D8B','#009688','#795548','#455A64','#8BC34A','#FF9800','#9C27B0'];
+  const datasets=activeCages().map((c,idx)=>{
+    const s=validRows.filter(r=>r.cage.id===c.id);
+    if(!s.length) return null;
+    return {
+      type:'line', label:c.name,
+      data:labels.map(d=>{const r=s.find(x=>x.date===d); return r?Number(r.fcr.toFixed(2)):null;}),
+      borderColor:colors[idx%colors.length], backgroundColor:colors[idx%colors.length], pointBackgroundColor:colors[idx%colors.length],
+      tension:.25, spanGaps:false
+    };
+  }).filter(Boolean);
+  if(canvas && datasets.length){
+    plFcrChartInst=new Chart(canvas.getContext('2d'),{
+      type:'line',
+      data:{labels:labels.map(d=>d.slice(2).replaceAll('-','/')),datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: FCR ${c.parsed.y??'—'}`}}},
+        scales:{y:{beginAtZero:false,title:{display:true,text:'FCR'},ticks:{font:{size:10}}},x:{ticks:{font:{size:10},maxRotation:45,minRotation:0},grid:{display:false}}}
+      }
+    });
+  }
+  const table=$('plFcrTrendTable');
+  if(!table) return;
+  const sorted=rows.sort((a,b)=>b.date.localeCompare(a.date)||a.cage.name.localeCompare(b.cage.name)).slice(0,300);
+  table.innerHTML=sorted.length?`<div class="table-wrap" style="margin-top:14px"><table>
+    <thead><tr><th>測量日</th><th>生簀</th><th>期間</th><th>給餌量</th><th>増重量</th><th>FCR</th></tr></thead>
+    <tbody>${sorted.map(r=>`<tr>
+      <td>${r.date}</td>
+      <td><strong>${r.cage.name}</strong></td>
+      <td>${r.prevDate||'—'}〜${r.date}</td>
+      <td>${fmtKgSmart(r.feed||0,1)}</td>
+      <td>${r.gain!==null&&Number.isFinite(r.gain)?fmtKgSmart(r.gain,1):'—'}</td>
+      <td style="font-weight:800;color:${fcrColor(r)}">${r.fcr!==null&&Number.isFinite(r.fcr)?r.fcr.toFixed(2):'—'}</td>
+    </tr>`).join('')}</tbody></table></div>`:
+    '<div class="empty-state"><p>FCR推移を表示するには、同じ生簀で2回以上の測量記録が必要です。</p></div>';
+  if(!datasets.length && sorted.length){
+    table.insertAdjacentHTML('afterbegin','<div class="alert alert-warn" style="margin-top:12px">測量記録はありますが、FCR計算に必要な給餌量または増重量が不足しています。</div>');
+  }
+}
+
 function renderPLStructure(from,to){
   const cb=getAllCost(from,to);
   if(plPieInst){plPieInst.destroy();plPieInst=null;}
@@ -2345,13 +4037,17 @@ function renderSettings(tab){
   document.querySelectorAll('.set-pane').forEach(el=>el.style.display='none');
   const pane=$('set-'+tab); if(pane) pane.style.display='';
   if(tab==='history')   renderHistory();
+  if(tab==='grounds')   renderGroundMgr();
   if(tab==='cages')     renderCageMgr();
+  if(tab==='transfer')  renderTransferMgr();
   if(tab==='initial')   renderInitialSet();
   if(tab==='species')   renderSpeciesMgr();
   if(tab==='costItems') renderCostItemMgr();
+  if(tab==='feedTypes') renderFeedTypeMgr();
   if(tab==='alloc')     renderAllocSet();
   if(tab==='units')     renderUnitsSet();
   if(tab==='backup')    renderBackup();
+  if(tab==='storage')   renderStorageUsage();
   if(tab==='oplog')     renderOplog();
   if(tab==='color')     renderColorSet();
 }
@@ -2365,7 +4061,7 @@ function renderHistory(){
     const recs=[...records].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,settingsHistoryLimit);
     tbody.innerHTML=recs.map(r=>`<tr>
       <td>${r.date}</td><td>${getCage(r.cageId).name||'—'}</td>
-      <td>${r.feed||'—'}kg</td><td>${r.dead||0}尾</td><td>${r.temp||'—'}℃</td>
+      <td>${normalizeFeedLines(r).length?normalizeFeedLines(r).map(l=>`${feedTypeName(l.feedTypeId)} ${fmtSmart(l.kg,1)}kg`).join('<br>'):'—'}</td><td>${r.dead||0}尾</td><td>${r.temp||'—'}℃</td>
       <td style="font-size:12px">${r.workCat?`[${r.workCat}] `:''} ${r.workNote||''}</td>
     </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   } else if(type==='ship'){
@@ -2376,6 +4072,10 @@ function renderHistory(){
       <td>${s.dest||'—'}</td><td>${s.count?fmtNum(s.count)+'尾':'—'}</td>
       <td>${s.weight?s.weight+'kg':'—'}</td><td style="font-weight:600">¥${fmtNum(s.amount)}</td>
     </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
+  } else if(type==='transfer'){
+    thead.innerHTML='<tr><th>日付</th><th>移動元</th><th>移動先</th><th>尾数</th><th>平均体重</th><th>重量</th></tr>';
+    const list=[...(transfers||[])].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,settingsHistoryLimit);
+    tbody.innerHTML=list.map(t=>`<tr><td>${t.date}</td><td>${getCage(t.fromCageId).name||'—'}</td><td>${getCage(t.toCageId).name||'—'}</td><td>${fmtNum(t.count)}尾</td><td>${Number(t.avgWeight).toFixed(3)}kg</td><td>${Number(t.weight||t.count*t.avgWeight).toFixed(1)}kg</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">データがありません</td></tr>';
   } else {
     thead.innerHTML='<tr><th>日付</th><th>生簀</th><th>費目</th><th>区分</th><th>金額</th><th>メモ</th></tr>';
     const list=[...costs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,settingsHistoryLimit);
@@ -2393,9 +4093,69 @@ function renderHistory(){
 }
 
 // 生簀管理
+
+function renderGroundMgr(){
+  const body=$('groundBody'); if(!body) return;
+  body.innerHTML=grounds.map(g=>`<tr style="${g.active===false?'opacity:.55':''}">
+    <td><strong>${g.name}</strong></td>
+    <td>${cages.filter(c=>(c.groundId||'')===g.id).length}</td>
+    <td><span class="badge ${g.active===false?'bg-gray':'bg-ok'}">${g.active===false?'無効':'有効'}</span></td>
+    <td class="master-row-actions">
+      <button class="btn btn-ghost btn-xs" onclick="toggleGround('${g.id}')">${g.active===false?'有効化':'無効化'}</button>
+      ${g.builtin?'':`<button class="btn btn-ghost btn-xs" onclick="renameGround('${g.id}')">名称変更</button>`}
+    </td>
+  </tr>`).join('')||'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--tx-m)">漁場が登録されていません</td></tr>';
+}
+function saveGround(){
+  const name=($('groundName')?.value||'').trim();
+  if(!name){toast('漁場名を入力してください');return;}
+  grounds.push({id:genId(),name,active:true});
+  save(KEYS.grounds,grounds); $('groundName').value=''; renderGroundMgr(); updateGroundSelectors(); toast('漁場を追加しました');
+}
+function toggleGround(id){ const g=getGround(id); if(!g.id)return; g.active=g.active===false; save(KEYS.grounds,grounds); renderGroundMgr(); updateGroundSelectors(); }
+function renameGround(id){ const g=getGround(id); const name=prompt('漁場名',g.name); if(!name)return; g.name=name.trim(); save(KEYS.grounds,grounds); renderGroundMgr(); updateGroundSelectors(); }
+
+function renderFeedTypeMgr(){
+  const body=$('feedTypeBody'); if(!body) return;
+  body.innerHTML=feedTypes.map(f=>{
+    const kg=Number(f.bagKg)||20, price=Number(f.bagPrice)||0;
+    return `<tr style="${f.active===false?'opacity:.55':''}">
+      <td><strong>${f.name}</strong></td>
+      <td>${kg}kg/袋</td>
+      <td>${price?'¥'+fmtNum(price):'—'}</td>
+      <td>${price&&kg?'¥'+fmtNum(Math.round(price/kg))+'/kg':'—'}</td>
+      <td><span class="badge ${f.active===false?'bg-gray':'bg-ok'}">${f.active===false?'無効':'有効'}</span></td>
+      <td class="master-row-actions"><button class="btn btn-ghost btn-xs" onclick="toggleFeedType('${f.id}')">${f.active===false?'有効化':'無効化'}</button><button class="btn btn-ghost btn-xs" onclick="editFeedType('${f.id}')">編集</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--tx-m)">餌マスタが登録されていません</td></tr>';
+}
+function saveFeedType(){
+  const name=($('ftName')?.value||'').trim();
+  if(!name){toast('餌名を入力してください');return;}
+  const bagKg=parseFloat($('ftBagKg')?.value)||20;
+  const bagPrice=parseFloat($('ftBagPrice')?.value)||0;
+  const memo=$('ftMemo')?.value||'';
+  feedTypes.push({id:genId(),name,bagKg,bagPrice,memo,active:true,priceHistory:bagPrice?[{date:today(),bagPrice}]:[]});
+  save(KEYS.feedTypes,feedTypes);
+  ['ftName','ftBagPrice','ftMemo'].forEach(id=>{if($(id))$(id).value='';}); if($('ftBagKg')) $('ftBagKg').value=20;
+  renderFeedTypeMgr(); updateCageSelectors(); toast('餌マスタを追加しました');
+}
+function toggleFeedType(id){ const f=getFeedType(id); if(!f.id)return; f.active=f.active===false; save(KEYS.feedTypes,feedTypes); renderFeedTypeMgr(); updateCageSelectors(); }
+function editFeedType(id){
+  const f=getFeedType(id); if(!f.id)return;
+  const name=prompt('餌名',f.name); if(!name)return;
+  const bagKg=parseFloat(prompt('1袋重量kg',f.bagKg||20))||20;
+  const bagPrice=parseFloat(prompt('現在袋単価円',f.bagPrice||0))||0;
+  f.name=name.trim(); f.bagKg=bagKg;
+  if(Number(f.bagPrice)!==bagPrice){ f.priceHistory=f.priceHistory||[]; f.priceHistory.push({date:today(),bagPrice}); }
+  f.bagPrice=bagPrice;
+  save(KEYS.feedTypes,feedTypes); renderFeedTypeMgr(); updateCageSelectors(); toast('餌マスタを更新しました');
+}
+
 function renderCageMgr(){
   $('cageMgrBody').innerHTML=cages.map(c=>`<tr style="${c.active===false?'opacity:.55':''}">
     <td><strong>${c.name}</strong></td>
+    <td>${getGround(c.groundId).name||'未設定'}</td>
     <td>${cageCurrentSpecies(c).name||'—'}</td>
     <td style="font-weight:600">${fmtNum(getLiving(c.id))}尾</td>
     <td>${c.avgWeight?c.avgWeight+'kg':'—'}</td>
@@ -2414,6 +4174,7 @@ function openCageModal(id){
   const c=id?cages.find(x=>x.id===id):null;
   $('cageModalTitle').textContent=c?'生簀を編集':'生簀を追加';
   $('cageId').value=c?.id||''; $('cageName').value=c?.name||'';
+  if($('cageGround')) { $('cageGround').innerHTML='<option value="">未設定</option>'+activeGrounds().map(g=>`<option value="${g.id}"${c?.groundId===g.id?' selected':''}>${g.name}</option>`).join(''); $('cageGround').value=c?.groundId||''; }
   $('cageCount').value=c?.count||''; $('cageStartDate').value=c?.startDate||today(); $('cageAvgWeight').value=c?.avgWeight||c?.initialAvgWeight||''; $('cageMemo').value=c?.memo||'';
   const sel=$('cageSpeciesSel');
   sel.innerHTML=`<option value="">自由入力</option>`+activeSpecies().map(s=>`<option value="${s.id}"${c?.speciesId===s.id?' selected':''}>${s.name}</option>`).join('');
@@ -2428,8 +4189,8 @@ function saveCage(){
   const name=$('cageName').value.trim(); if(!name){toast('生簀名を入力してください');return;}
   const speciesId=$('cageSpeciesSel').value;
   const speciesText=speciesId?'':$('cageSpeciesText').value.trim();
-  const payload={id:$('cageId').value||genId(),name,speciesId,speciesText,
-    count:parseInt($('cageCount').value)||0,avgWeight:parseFloat($('cageAvgWeight').value)||0,startDate:$('cageStartDate').value,memo:$('cageMemo').value};
+  const payload={id:$('cageId').value||genId(),name,speciesId,speciesText, groundId:$('cageGround')?.value||'',
+    count:parseInt($('cageCount').value)||0,avgWeight:parseFloat($('cageAvgWeight').value)||0,startDate:$('cageStartDate').value,memo:$('cageMemo').value,updatedAt:new Date().toISOString()};
   const existing=cages.find(c=>c.id===payload.id);
   if(existing){
     payload.speciesHistory=existing.speciesHistory||[];
@@ -2453,6 +4214,61 @@ function toggleCageActive(id){
   const c=getCage(id); if(!c.id) return;
   c.active = c.active === false;
   save(KEYS.cages,cages); renderCageMgr(); toast(c.active?'有効化しました':'無効化しました');
+}
+
+
+// 分養・移動
+function renderTransferMgr(){
+  const opts=activeCages().map(c=>`<option value="${c.id}">${c.name}（${cageCurrentSpecies(c).name||'—'}）</option>`).join('');
+  $('trFrom').innerHTML='<option value="">選択...</option>'+opts;
+  $('trTo').innerHTML='<option value="">選択...</option>'+opts;
+  if(!$('trDate').value) $('trDate').value=today();
+  ['trCount','trAvgWeight'].forEach(id=>{ const el=$(id); if(el && !el._bind){ el.addEventListener('input',updateTransferPreview); el._bind=true; }});
+  updateTransferPreview();
+  renderTransferTable();
+}
+function updateTransferPreview(){
+  const w=(parseFloat($('trCount')?.value)||0)*(parseFloat($('trAvgWeight')?.value)||0);
+  if($('trWeightPreview')) $('trWeightPreview').value=w?`${w.toFixed(1)} kg`:'';
+}
+function clearTransferForm(){
+  ['trCount','trAvgWeight','trMemo'].forEach(id=>{if($(id)) $(id).value='';});
+  if($('trDate')) $('trDate').value=today();
+  if($('trFrom')) $('trFrom').value=''; if($('trTo')) $('trTo').value='';
+  updateTransferPreview();
+}
+function saveTransfer(){
+  const date=$('trDate').value||today();
+  const fromCageId=$('trFrom').value, toCageId=$('trTo').value;
+  const count=parseInt($('trCount').value)||0;
+  const avgWeight=parseFloat($('trAvgWeight').value)||0;
+  if(!fromCageId||!toCageId){toast('移動元・移動先を選択してください');return;}
+  if(fromCageId===toCageId){toast('同じ生簀には移動できません');return;}
+  if(count<=0||avgWeight<=0){toast('尾数と平均体重を入力してください');return;}
+  const living=getLiving(fromCageId,date);
+  if(count>living){toast(`移動尾数が移動元の現在尾数（${fmtNum(living)}尾）を超えています`);return;}
+  const payload={id:genId(),date,fromCageId,toCageId,count,avgWeight,weight:count*avgWeight,memo:$('trMemo').value||'',updatedAt:new Date().toISOString()};
+  pushUndo('分養・移動記録');
+  transfers.unshift(payload);
+  save(KEYS.transfers,transfers);
+  addLog('分養・移動',`${date} ${getCage(fromCageId).name}→${getCage(toCageId).name} ${fmtNum(count)}尾 ${payload.weight.toFixed(1)}kg`);
+  clearTransferForm(); renderTransferMgr(); showUndoToast();
+}
+function deleteTransfer(id){
+  confirmDlg('分養・移動を削除','この分養・移動記録を削除しますか？','削除する',()=>{
+    pushUndo('分養・移動記録の削除');
+    transfers=transfers.filter(t=>t.id!==id); save(KEYS.transfers,transfers); renderTransferMgr(); showUndoToast();
+  });
+}
+function renderTransferTable(){
+  if(!$('transferBody')) return;
+  const list=[...(transfers||[])].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,100);
+  $('transferBody').innerHTML=list.map(t=>`<tr>
+    <td>${t.date}</td><td>${getCage(t.fromCageId).name||'—'}</td><td>${getCage(t.toCageId).name||'—'}</td>
+    <td>${fmtNum(t.count)}尾</td><td>${Number(t.avgWeight).toFixed(3)}kg</td><td style="font-weight:700">${Number(t.weight||t.count*t.avgWeight).toFixed(1)}kg</td>
+    <td style="font-size:12px;color:var(--tx-m)">${t.memo||''}</td>
+    <td><button class="btn-icon danger" onclick="deleteTransfer('${t.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></td>
+  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--tx-m)">分養・移動記録がありません</td></tr>';
 }
 
 // 飼育開始登録
@@ -2618,37 +4434,173 @@ function exportCSV(type){
 }
 
 // バックアップ
-function fullBackupData(){
+
+function normalizeShipRecord(s){
+  if(!s) return s;
   return {
-    version:24,
-    exportedAt:new Date().toISOString(),
-    cages,species,records,ships,costs,inventory,costItems,settings,oplog
+    ...s,
+    dest:s.dest||s.buyer||'',
+    price:Number(s.price||s.unitPrice||0),
+    note:s.note||s.memo||''
   };
 }
-function applyBackupData(d){
-  cages=d.cages||[];species=d.species||defaultSpecies();records=d.records||[];
-  ships=d.ships||[];costs=d.costs||[];inventory=d.inventory||[];
-  costItems=d.costItems||defaultCostItems();settings=d.settings||defaultSettings();oplog=d.oplog||oplog||[];
-  save(KEYS.cages,cages);save(KEYS.species,species);save(KEYS.records,records);
-  save(KEYS.ships,ships);save(KEYS.costs,costs);save(KEYS.inventory,inventory);
-  save(KEYS.costItems,costItems);save(KEYS.settings,settings);save(KEYS.oplog,oplog);
+function normalizeCostRecord(c){
+  if(!c) return c;
+  return {
+    ...c,
+    cageId:(c.cageId==='common'?null:c.cageId),
+    note:c.note||c.memo||''
+  };
 }
+
+function fullBackupData(){
+  return {
+    version:28,
+    exportedAt:new Date().toISOString(),
+    cages,species,records,ships,costs,inventory,costItems,settings,oplog,transfers,grounds,feedTypes
+  };
+}
+
+function normalizeLoadedDataNoSave(d){
+  cages=d.cages||[];
+  species=d.species||defaultSpecies();
+  records=d.records||[];
+  ships=d.ships||[];
+  costs=d.costs||[];
+  inventory=d.inventory||[];
+  costItems=d.costItems||defaultCostItems();
+  settings=d.settings||defaultSettings();
+  oplog=d.oplog||[];
+  transfers=d.transfers||[];
+  grounds=d.grounds||defaultGrounds();
+  feedTypes=d.feedTypes||defaultFeedTypes();
+
+  if(!Array.isArray(grounds)||!grounds.length) grounds=defaultGrounds();
+  if(!Array.isArray(feedTypes)||!feedTypes.length) feedTypes=defaultFeedTypes();
+  if(!grounds.some(g=>g.id==='gr0')) grounds.unshift({id:'gr0',name:'未設定',active:true,builtin:true});
+  if(!feedTypes.some(f=>f.id==='ft-common')) feedTypes.unshift({id:'ft-common',name:'共通飼料',bagKg:20,bagPrice:0,active:true,builtin:true,priceHistory:[]});
+
+  cages=(cages||[]).map(c=>({...c,groundId:c.groundId||'gr0'}));
+  feedTypes=(feedTypes||[]).map(f=>({
+    id:f.id||genId(),
+    name:f.name||f.feedName||'餌',
+    bagKg:Number(f.bagKg||f.packageKg||20),
+    bagPrice:Number(f.bagPrice||f.pricePerBag||0),
+    memo:f.memo||'',
+    active:f.active!==false,
+    builtin:!!f.builtin,
+    priceHistory:Array.isArray(f.priceHistory)?f.priceHistory:[]
+  }));
+  inventory=(inventory||[]).map(i=>{
+    const ftid=i.feedTypeId||i.feedId||'ft-common';
+    const ft=(feedTypes||[]).find(f=>f.id===ftid)||{};
+    const bagKg=Number(i.bagKg||ft.bagKg||20);
+    const bags=Number(i.bags||i.packageCount||((Number(i.qty)||0)/bagKg)||0);
+    const bagPrice=Number(i.bagPrice||i.pricePerBag||((Number(i.unitPrice)||0)*bagKg)||ft.bagPrice||0);
+    const qty=Number(i.qty||bags*bagKg||0);
+    const unitPrice=Number(i.unitPrice||((bagKg&&bagPrice)?bagPrice/bagKg:0));
+    return {...i,feedTypeId:ftid,name:i.name||ft.name||'餌',bags,bagKg,bagPrice,qty,unitPrice,amount:Number(i.amount||Math.round(bags*bagPrice)||0)};
+  });
+  records=(records||[]).map(r=>{
+    let lines=Array.isArray(r.feedLines)?r.feedLines:[];
+    if(!lines.length&&Number(r.feed)>0) lines=[{feedTypeId:r.feedTypeId||'ft-common',kg:Number(r.feed)||0}];
+    lines=lines.map(l=>({feedTypeId:l.feedTypeId||l.feedId||'ft-common',kg:Number(l.kg||l.feed||0)})).filter(l=>l.kg>0);
+    return {...r,feedLines:lines,feed:lines.reduce((s,l)=>s+(Number(l.kg)||0),0)};
+  });
+}
+async function applyBackupData(d){
+  normalizeLoadedDataNoSave(d);
+  const pairs=[
+    [KEYS.cages,cages],[KEYS.species,species],[KEYS.records,records],
+    [KEYS.ships,ships],[KEYS.costs,costs],[KEYS.inventory,inventory],
+    [KEYS.costItems,costItems],[KEYS.settings,settings],[KEYS.oplog,oplog],
+    [KEYS.transfers,transfers],[KEYS.grounds,grounds],[KEYS.feedTypes,feedTypes]
+  ];
+  for(const [k,v] of pairs){
+    idbPreloadCache[k]=v;
+  }
+  invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
+  // 書き込みは直列キューで実行し、すべて完了するまで待つ（途中失敗を確実に検知するため）
+  for(const [k,v] of pairs){
+    await idbPut(k,v);
+  }
+}
+function showRestoreProgress(msg='バックアップを復元しています…'){
+  const el=document.getElementById('restoreProgress');
+  const tx=document.getElementById('restoreProgressText');
+  if(tx) tx.textContent=msg;
+  if(el) el.classList.add('show');
+}
+function hideRestoreProgress(){
+  document.getElementById('restoreProgress')?.classList.remove('show');
+}
+function restoreLargeBackup(d,done){
+  showRestoreProgress();
+  setTimeout(async ()=>{
+    try{
+      await applyBackupData(d);
+      setTimeout(()=>{
+        hideRestoreProgress();
+        checkStorageQuota();
+        done&&done(true);
+      },80);
+    }catch(err){
+      hideRestoreProgress();
+      console.error(err);
+      const msg=String(err&&err.message||err);
+      if(msg.includes('Quota')||msg.includes('quota')||msg.includes('exceeded')){
+        alert('バックアップ容量が大きすぎるため、端末の保存領域に収まりませんでした。お手数ですが、データの一部を分けて読み込むか、不要なデータを整理してから再度お試しください。');
+      }else{
+        alert('バックアップの復元に失敗しました。ファイル形式を確認してください。');
+      }
+      done&&done(false);
+    }
+  },80);
+}
+
+
 function renderBackup(){
-  const saved=JSON.parse(localStorage.getItem('aq_backups')||'[]');
-  $('backupHistBody').innerHTML=saved.map((b,i)=>`<tr>
-    <td style="font-size:12px">${new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP')}</td>
-    <td style="font-size:12px">${(b.cages||[]).length}生簀 / ${(b.records||[]).length}記録 / ${(b.ships||[]).length}出荷 / ${(b.costs||[]).length}コスト</td>
-    <td><button class="btn btn-ghost btn-xs" onclick="restoreBackup(${i})">復元</button></td>
-  </tr>`).join('')||'<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--tx-m)">履歴なし</td></tr>';
+  const saved=getBackupHistory();
+  $('backupHistBody').innerHTML=saved.map((b,i)=>{
+    const sum=b.summary||{};
+    const hasFull=Array.isArray(b.records)||Array.isArray(b.cages);
+    const cagesN=hasFull?(b.cages||[]).length:(sum.cages||0);
+    const recordsN=hasFull?(b.records||[]).length:(sum.records||0);
+    const shipsN=hasFull?(b.ships||[]).length:(sum.ships||0);
+    const costsN=hasFull?(b.costs||[]).length:(sum.costs||0);
+    const transfersN=hasFull?(b.transfers||[]).length:(sum.transfers||0);
+    return `<tr>
+      <td style="font-size:12px">${new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP')}</td>
+      <td style="font-size:12px">${cagesN}生簀 / ${recordsN}記録 / ${shipsN}出荷 / ${costsN}コスト / ${transfersN}移動${hasFull?'':'<br><span style="color:var(--warn)">履歴は概要のみです。復元は保存したJSONファイルから行ってください。</span>'}</td>
+      <td>${hasFull?`<button class="btn btn-ghost btn-xs" onclick="restoreBackup(${i})">復元</button>`:'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--tx-m)">履歴なし</td></tr>';
 }
 function exportJSON(){
   const data=fullBackupData();
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`akamatsu_${today()}.json`;a.click();
-  const saved=JSON.parse(localStorage.getItem('aq_backups')||'[]');
-  saved.unshift({...data,savedAt:new Date().toISOString()});
+  URL.revokeObjectURL(a.href);
+
+  // 大容量データを丸ごと履歴へ保存すると容量を圧迫するため、履歴には件数概要だけ残す。
+  // 復元は保存したJSONファイルから行う。
+  const saved=getBackupHistory();
+  saved.unshift({
+    savedAt:new Date().toISOString(),
+    exportedAt:data.exportedAt,
+    summary:{
+      cages:cages.length,
+      records:records.length,
+      ships:ships.length,
+      costs:costs.length,
+      inventory:inventory.length,
+      transfers:transfers.length,
+      grounds:grounds.length,
+      feedTypes:feedTypes.length
+    }
+  });
   if(saved.length>10)saved.length=10;
-  localStorage.setItem('aq_backups',JSON.stringify(saved));
+  setBackupHistory(saved);
   toast('バックアップを保存しました');renderBackup();addLog('バックアップ','JSONエクスポート');
 }
 function importJSON(e){
@@ -2657,27 +4609,29 @@ function importJSON(e){
   reader.onload=ev=>{
     try{
       const d=JSON.parse(ev.target.result);
-      confirmDlg('バックアップを復元',`生簀${(d.cages||[]).length}件・記録${(d.records||[]).length}件・出荷${(d.ships||[]).length}件を読み込みます。現在のデータは上書きされます。`,'復元する',()=>{
-        applyBackupData(d);
-        toast('データを復元しました');addLog('インポート','JSON復元');showPage('dash');
+      confirmDlg('バックアップを復元',`生簀${(d.cages||[]).length}件・記録${(d.records||[]).length}件・出荷${(d.ships||[]).length}件・移動${(d.transfers||[]).length}件を読み込みます。現在のデータは上書きされます。`,'復元する',()=>{
+        restoreLargeBackup(d,(ok)=>{ if(!ok)return; toast('データを復元しました');addLog('インポート','JSON復元');updateGroundSelectors(); updateCageSelectors(); showPage('dash'); });
       });
-    }catch{toast('ファイルの読み込みに失敗しました');}
+    }catch(err){ console.error(err); toast('ファイルの読み込みに失敗しました');}
   };
   reader.readAsText(file);e.target.value='';
 }
 function restoreBackup(i){
-  const saved=JSON.parse(localStorage.getItem('aq_backups')||'[]');const b=saved[i];if(!b)return;
+  const saved=getBackupHistory();const b=saved[i];if(!b)return;
+  if(!Array.isArray(b.records)&&!Array.isArray(b.cages)){
+    alert('この履歴は概要のみです。復元する場合は、保存したJSONファイルを「バックアップ(JSON)を読込」から読み込んでください。');
+    return;
+  }
   confirmDlg('バックアップを復元',`${new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP')} のバックアップを復元しますか？`,'復元する',()=>{
-    applyBackupData(b);
-    toast('復元しました');addLog('バックアップ復元',new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP'));
-    showPage('dash');
+    restoreLargeBackup(b,(ok)=>{ if(!ok)return; toast('復元しました');addLog('バックアップ復元',new Date(b.savedAt||b.exportedAt).toLocaleString('ja-JP')); showPage('dash'); });
   });
 }
+
 
 // 操作ログ
 function renderOplog(){
   $('oplogBody').innerHTML=oplog.slice(0,100).map(l=>`<tr>
-    <td style="font-size:12px;white-space:nowrap">${new Date(l.ts).toLocaleString('ja-JP')}</td>
+    <td style="font-size:12px;white-space:nowrap">${new Date(l.ts||l.at||Date.now()).toLocaleString('ja-JP')}</td>
     <td>${l.action}</td>
     <td style="font-size:12px;color:var(--tx-m)">${l.detail}</td>
   </tr>`).join('')||'<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--tx-m)">ログがありません</td></tr>';
@@ -2699,21 +4653,137 @@ function toggleTheme(){setTheme(settings.theme==='dark'?'light':'dark');}
 
 // データ初期化
 function resetAll(){
-  confirmDlg('すべてのデータを削除','この操作は元に戻せません。事前にJSONバックアップを取ってください。','完全に削除する',()=>{
-    Object.values(KEYS).forEach(k=>localStorage.removeItem(k));
+  confirmDlg('すべてのデータを削除','この操作は元に戻せません。事前にJSONバックアップを取ってください。社内共有データ（他拠点と同期している分）も削除されます。','完全に削除する',async ()=>{
+    const allKeys=Object.values(KEYS).concat(['aq_backups']);
+    for(const k of allKeys){
+      delete idbPreloadCache[k];
+      idbDelete(k);
+      try{ localStorage.removeItem(k); }catch(e){}
+      if(fsSyncEnabled) await fsDeleteKey(k); // Firestore側も消しておかないと、同期で復活してしまう
+    }
     cages=[];species=defaultSpecies();records=[];ships=[];costs=[];
-    inventory=[];costItems=defaultCostItems();settings=defaultSettings();oplog=[];
+    inventory=[];costItems=defaultCostItems();settings=defaultSettings();oplog=[];transfers=[];grounds=defaultGrounds();feedTypes=defaultFeedTypes();
     toast('初期化しました');showPage('dash');
   });
 }
 
 // ─── INIT ─────────────────────────────────────────────────
-(function init(){
+// LocalStorageからIndexedDBへの移行（初回のみ）。
+// 既にIndexedDB側にデータがあれば何もしない。無ければ、過去にLocalStorageへ保存されていた
+// aq_* キーをそのままIndexedDBへコピーする（データを失わないための一回限りの引き継ぎ）。
+async function migrateLocalStorageToIDBOnce(idbData){
+  const hasAnyIDBData=Object.keys(idbData||{}).length>0;
+  if(hasAnyIDBData) return idbData;
+  const migrated={};
+  let foundAny=false;
+  try{
+    const allKeys=Object.values(KEYS).concat(['aq_backups']);
+    for(const k of allKeys){
+      const raw=localStorage.getItem(k);
+      if(raw===null||raw===undefined) continue;
+      foundAny=true;
+      try{ migrated[k]=JSON.parse(raw); }catch(e){ migrated[k]=raw; }
+    }
+  }catch(e){ /* LocalStorage自体が使えない環境 */ }
+  if(foundAny){
+    for(const [k,v] of Object.entries(migrated)){
+      await idbPut(k,v);
+    }
+    addLogSafe('ストレージ移行','LocalStorageからIndexedDBへ自動移行しました');
+  }
+  return migrated;
+}
+// addLog は oplog（IndexedDB読み込み後）に依存するため、移行処理専用の簡易版を用意
+function addLogSafe(action,detail){
+  try{
+    if(Array.isArray(oplog)){ oplog.unshift({id:genId(),ts:new Date().toISOString(),action,detail}); }
+  }catch(e){}
+}
+function hideBootOverlay(){
+  const el=$('appBootOverlay'); if(el) el.classList.remove('show');
+}
+// IndexedDB（ローカルキャッシュ）からの読み込みと、画面の初期表示。オフラインでもここまでは動く。
+async function bootLocalState(){
+  try{
+    let idbData=await idbGetAll();
+    if(idbData===null){
+      idbAvailable=false;
+      idbPreloadCache={};
+    }else{
+      idbData=await migrateLocalStorageToIDBOnce(idbData);
+      idbPreloadCache=idbData||{};
+    }
+  }catch(e){
+    console.error('起動時データ読み込みでエラーが発生しました',e);
+    idbPreloadCache={};
+  }
+  reloadStateFromStore();
   if(settings.theme==='dark') document.documentElement.setAttribute('data-theme','dark');
   const dateEl=$('topDate');
   if(dateEl) dateEl.textContent=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   showPage('dash');
-})();
+  checkStorageQuota();
+}
+// Firebaseの準備が整うまで待つ（モジュールスクリプトの読み込み完了を待機）
+function waitForFirebaseBridge(){
+  return new Promise((resolve)=>{
+    if(window.firebaseBridge){ resolve(); return; }
+    window.addEventListener('firebaseBridgeReady', ()=>resolve(), {once:true});
+    // 万一Firebaseの読み込み自体に失敗した場合のタイムアウト（オフライン専用モードで起動継続）
+    setTimeout(()=>resolve(), 8000);
+  });
+}
+// ログイン済みになったら、Firestoreの最新データを取り込み、以降はリアルタイム同期する
+async function startFirestoreSync(){
+  fsSyncEnabled=true;
+  try{
+    const remote=await fsGetAll();
+    if(remote && Object.keys(remote).length>0){
+      fsApplyingRemote=true;
+      for(const [k,v] of Object.entries(remote)){
+        idbPreloadCache[k]=v;
+        idbPut(k,v);
+      }
+      fsApplyingRemote=false;
+      reloadStateFromStore();
+      invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
+      showPage(curPage||'dash');
+    }else if(remote!==null){
+      // Firestore側が空＝初回利用。今ローカルにあるデータを初期データとしてアップロードする。
+      for(const k of Object.values(KEYS).concat(['aq_backups'])){
+        if(idbPreloadCache[k]!==undefined) fsPut(k, idbPreloadCache[k]);
+      }
+    }
+  }catch(e){
+    console.error('Firestore初回同期に失敗しました（オフラインの可能性）',e);
+  }
+  fsStartListening();
+}
+async function bootApp(){
+  await bootLocalState();   // まずローカルキャッシュだけで画面を出す（オフラインでも使える）
+  hideBootOverlay();
+  await waitForFirebaseBridge();
+  if(!window.firebaseBridge){
+    // Firebaseの読み込みに失敗：完全にオフライン専用（今まで通りIndexedDBのみ）で動作継続
+    return;
+  }
+  const { onAuthStateChanged, auth } = window.firebaseBridge;
+  onAuthStateChanged(window.firebaseBridge.auth, async (user)=>{
+    fsUser=user;
+    updateSyncStatusBox();
+    if(user){
+      hideLoginOverlay();
+      clearLoginError();
+      $('loginPassword').value='';
+      await startFirestoreSync();
+    }else{
+      fsSyncEnabled=false;
+      fsStopListening();
+      showLoginOverlay();
+    }
+  });
+}
+bootApp();
 
 </script>
 
@@ -2724,6 +4794,83 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
+
+
+/* v28.0.8 reliable display / FCR patch */
+function fmtComma08(value, decimals=null){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return '0';
+  const hasDecimal=Math.abs(n-Math.trunc(n))>1e-9;
+  const d=decimals===null?(hasDecimal?1:0):decimals;
+  return n.toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function fmtKg08(value, decimals=null){ return fmtComma08(value,decimals)+'kg'; }
+function shrinkTextToFit08(el, min=13){
+  if(!el) return;
+  el.style.fontSize='';
+  let size=parseFloat(getComputedStyle(el).fontSize)||24;
+  let guard=0;
+  while(el.scrollWidth > el.clientWidth && size>min && guard<24){
+    size-=1;
+    el.style.fontSize=size+'px';
+    guard++;
+  }
+}
+function shrinkNumbers08(){
+  document.querySelectorAll('.kpi .kpi-val,.dash-cage-metric .m-val,.dash-cage-metric div').forEach(el=>shrinkTextToFit08(el, el.classList.contains('m-val')?12:11));
+}
+// （旧FCR/インポート実装の重複定義を削除。動作中の定義は上部 renderPLFcrTrend / getFCRSeries / normalizeImportedData を参照）
+(function(){
+  const oldRenderDash=window.renderDash;
+  window.renderDash=function(){
+    oldRenderDash();
+    const kpis=document.querySelectorAll('.kpi .kpi-val');
+    kpis.forEach(el=>{
+      let txt=el.textContent||'';
+      if(txt.includes('kg')){
+        const n=parseFloat(txt.replace(/,/g,''));
+        if(Number.isFinite(n)) el.innerHTML=fmtComma08(n,1)+'<span style="font-size:14px;font-weight:400;margin-left:3px">kg</span>';
+      }
+    });
+    document.querySelectorAll('.dash-cage-metric .m-val').forEach(el=>{
+      const txt=el.textContent||'';
+      if(txt.includes('kg')){
+        const n=parseFloat(txt.replace(/,/g,''));
+        if(Number.isFinite(n)) el.textContent=fmtKg08(n, txt.includes('.')?2:0);
+      }else if(txt.endsWith('尾')){
+        const n=parseFloat(txt.replace(/,/g,''));
+        if(Number.isFinite(n)) el.textContent=fmtComma08(n,0)+'尾';
+      }
+    });
+    document.querySelectorAll('.dash-cage-metric div').forEach(el=>{
+      const txt=el.textContent||'';
+      if(txt.includes('増重量 ')){
+        const n=parseFloat(txt.replace(/,/g,'').replace('増重量',''));
+        if(Number.isFinite(n)) el.textContent='増重量 '+fmtKg08(n,0);
+      }
+      if(txt.includes('在池 ')){
+        const n=parseFloat(txt.replace(/,/g,'').replace('在池',''));
+        if(Number.isFinite(n)) el.textContent='在池 '+fmtKg08(n,0);
+      }
+    });
+    setTimeout(shrinkNumbers08,0);
+  };
+  const oldRenderPL=window.renderPL;
+  window.renderPL=function(tab='summary', force=false){
+    // FCR推移タブの表示整形のみ担当し、それ以外は元の renderPL に委譲する。
+    // force 引数を確実に引き継ぐ（集計更新ボタンが効かなくなるのを防ぐ）。
+    if(tab==='fcrtrend'){
+      document.getElementById('plLazyNotice')?.style&&(document.getElementById('plLazyNotice').style.display='none');
+      const from=document.getElementById('plFrom')?.value||null, to=document.getElementById('plTo')?.value||null;
+      renderPLFcrTrend(from,to);
+      const sel=document.getElementById('plMenuSelect'); if(sel) sel.value='fcrtrend';
+      return;
+    }
+    oldRenderPL(tab, force);
+  };
+  window.addEventListener('resize',()=>setTimeout(shrinkNumbers08,80));
+})();
+
 </script>
 </body>
 </html>
