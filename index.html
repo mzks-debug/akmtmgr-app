@@ -957,6 +957,24 @@ input,select,textarea{max-width:100%;min-width:0}
   padding:0 2px;
 }
 
+/* 粗利率分析サブタブ */
+.margin-subtabs{
+  display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;
+  border-bottom:2px solid var(--bd);padding-bottom:0;
+}
+.margin-subtab{
+  padding:7px 16px;border:none;background:none;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--tx-s);border-radius:6px 6px 0 0;
+  border-bottom:3px solid transparent;margin-bottom:-2px;
+}
+.margin-subtab.active{color:var(--aqua);border-bottom-color:var(--aqua);}
+.margin-subtab:active{background:var(--surface2);}
+
+/* 粗利率バー */
+.margin-bar-wrap{display:flex;align-items:center;gap:8px;min-width:0;}
+.margin-bar-bg{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;min-width:40px;}
+.margin-bar-fill{height:100%;border-radius:4px;transition:width .3s;}
+
 /* FCR生簀フィルター：タグ型ボタン */
 .fcr-filter-wrap{
   margin-bottom:10px;
@@ -1691,7 +1709,16 @@ input,select,textarea{max-width:100%;min-width:0}
   <div id="pl-summary"   class="pl-pane"><div id="plSummaryBox"></div></div>
   <div id="pl-cage"      class="pl-pane" style="display:none"><div id="plCageBox"></div></div>
   <div id="pl-species"   class="pl-pane" style="display:none"><div id="plSpeciesBox"></div></div>
-  <div id="pl-margin"    class="pl-pane" style="display:none"><div id="plMarginBox"></div></div>
+  <div id="pl-margin" class="pl-pane" style="display:none">
+    <!-- サブタブ -->
+    <div class="margin-subtabs">
+      <button class="margin-subtab active" data-sub="cage"    onclick="switchMarginSub('cage')">生簀別</button>
+      <button class="margin-subtab"        data-sub="species" onclick="switchMarginSub('species')">魚種別</button>
+      <button class="margin-subtab"        data-sub="ground"  onclick="switchMarginSub('ground')">漁場別</button>
+      <button class="margin-subtab"        data-sub="monthly" onclick="switchMarginSub('monthly')">月別推移</button>
+    </div>
+    <div id="plMarginBox"></div>
+  </div>
   <div id="pl-trend"     class="pl-pane" style="display:none">
     <div class="card"><div class="card-hd"><div class="card-hd-l">月別推移（12ヶ月）</div></div>
       <div class="chart-box lg"><canvas id="plTrendChart"></canvas></div></div></div>
@@ -3965,26 +3992,142 @@ function renderPLSpecies(from,to){
     return makePLCard(spName,`${cl.length}生簀（${cl.map(c=>c.name).join('・')}）`,sales,cb);
   }).join('')||'<div class="empty-state"><p>データがありません</p></div>';
 }
-function renderPLMargin(from,to){
-  const rows=cages.map(cage=>{
-    const sales=ships.filter(s=>s.cageId===cage.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((s,sh)=>s+sh.amount,0);
-    const cb=getCageCost(cage.id,from,to);
-    const profit=sales-cb.total, margin=sales?Math.round(profit/sales*100):null;
-    return{cage,sales,cb,profit,margin,fcr:getFCR(cage.id,to)};
-  }).sort((a,b)=>(b.margin||0)-(a.margin||0));
-  $('plMarginBox').innerHTML=`<div class="table-wrap"><table>
-    <thead><tr><th>生簀</th><th>魚種</th><th>売上</th><th>コスト</th><th>粗利</th><th>粗利率</th><th>FCR</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr>
-      <td><strong>${r.cage.name}</strong></td>
-      <td>${cageCurrentSpecies(r.cage).name||'—'}</td>
-      <td>¥${fmtNum(r.sales)}</td>
-      <td>¥${fmtNum(r.cb.total)}</td>
-      <td style="color:${r.profit>=0?'var(--ok)':'var(--danger)'};font-weight:600">${r.profit<0?'-':''}¥${fmtNum(Math.abs(r.profit))}</td>
-      <td style="font-weight:700;color:${r.margin===null?'var(--tx-m)':r.margin>=20?'var(--ok)':r.margin>=0?'var(--warn)':'var(--danger)'}">${r.margin!==null?r.margin+'%':'—'}</td>
-      <td style="font-weight:700;color:${fcrColor(r.fcr)}">${fmtFCR(r.fcr)}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
+let curMarginSub='cage';
+let plMarginMonthChart=null;
+
+function switchMarginSub(sub){
+  curMarginSub=sub;
+  document.querySelectorAll('.margin-subtab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.sub===sub);
+  });
+  const from=$('plFrom')?.value||null, to=$('plTo')?.value||null;
+  renderPLMargin(from,to);
 }
+
+function marginBarHtml(margin){
+  if(margin===null) return '<span style="color:var(--tx-m)">—</span>';
+  const clamped=Math.max(0,Math.min(100,margin));
+  const color=margin>=20?'var(--ok)':margin>=0?'var(--warn)':'var(--danger)';
+  const pct=margin<0?0:clamped;
+  return `<div class="margin-bar-wrap">
+    <span style="font-weight:700;color:${color};min-width:38px;text-align:right">${margin}%</span>
+    <div class="margin-bar-bg"><div class="margin-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+  </div>`;
+}
+
+function renderPLMargin(from,to){
+  const box=$('plMarginBox'); if(!box) return;
+  const sub=curMarginSub;
+
+  if(sub==='cage'){
+    const rows=activeCages().map(cage=>{
+      const sales=ships.filter(s=>s.cageId===cage.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((s,sh)=>s+sh.amount,0);
+      const cb=getCageCost(cage.id,from,to);
+      const profit=sales-cb.total, margin=sales?Math.round(profit/sales*100):null;
+      return{cage,sales,cb,profit,margin,fcr:getFCR(cage.id,to)};
+    }).sort((a,b)=>(b.margin??-999)-(a.margin??-999));
+    box.innerHTML=`<div class="table-wrap"><table>
+      <thead><tr><th>生簀</th><th>魚種</th><th>売上</th><th>コスト</th><th>粗利</th><th>粗利率</th><th>FCR</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td><strong>${r.cage.name}</strong></td>
+        <td>${cageCurrentSpecies(r.cage).name||'—'}</td>
+        <td>¥${fmtNum(r.sales)}</td>
+        <td>¥${fmtNum(r.cb.total)}</td>
+        <td style="color:${r.profit>=0?'var(--ok)':'var(--danger)'};font-weight:600">${r.profit<0?'-':''}¥${fmtNum(Math.abs(r.profit))}</td>
+        <td>${marginBarHtml(r.margin)}</td>
+        <td style="font-weight:700;color:${fcrColor(r.fcr)}">${fmtFCR(r.fcr)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+
+  }else if(sub==='species'){
+    const spMap={};
+    activeCages().forEach(cage=>{
+      const spName=cageCurrentSpecies(cage).name||'未設定';
+      if(!spMap[spName]) spMap[spName]={name:spName,sales:0,cost:0,cageCount:0};
+      const sales=ships.filter(s=>s.cageId===cage.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((s,sh)=>s+sh.amount,0);
+      const cb=getCageCost(cage.id,from,to);
+      spMap[spName].sales+=sales; spMap[spName].cost+=cb.total; spMap[spName].cageCount++;
+    });
+    const rows=Object.values(spMap).map(r=>({...r,profit:r.sales-r.cost,margin:r.sales?Math.round((r.sales-r.cost)/r.sales*100):null})).sort((a,b)=>(b.margin??-999)-(a.margin??-999));
+    box.innerHTML=`<div class="table-wrap"><table>
+      <thead><tr><th>魚種</th><th>生簀数</th><th>売上合計</th><th>コスト合計</th><th>粗利合計</th><th>粗利率</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td><strong>${r.name}</strong></td>
+        <td style="text-align:center">${r.cageCount}</td>
+        <td>¥${fmtNum(r.sales)}</td><td>¥${fmtNum(r.cost)}</td>
+        <td style="color:${r.profit>=0?'var(--ok)':'var(--danger)'};font-weight:600">${r.profit<0?'-':''}¥${fmtNum(Math.abs(r.profit))}</td>
+        <td>${marginBarHtml(r.margin)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+    <div style="font-size:12px;color:var(--tx-m);margin-top:8px;padding:0 4px">※間接費は生簀数で均等按分しています。</div>`;
+
+  }else if(sub==='ground'){
+    const grMap={};
+    activeCages().forEach(cage=>{
+      const gr=grounds.find(g=>g.id===cage.groundId)||{name:'未設定'};
+      if(!grMap[gr.name]) grMap[gr.name]={name:gr.name,sales:0,cost:0,cageCount:0};
+      const sales=ships.filter(s=>s.cageId===cage.id&&(!from||s.date>=from)&&(!to||s.date<=to)).reduce((s,sh)=>s+sh.amount,0);
+      const cb=getCageCost(cage.id,from,to);
+      grMap[gr.name].sales+=sales; grMap[gr.name].cost+=cb.total; grMap[gr.name].cageCount++;
+    });
+    const rows=Object.values(grMap).map(r=>({...r,profit:r.sales-r.cost,margin:r.sales?Math.round((r.sales-r.cost)/r.sales*100):null})).sort((a,b)=>(b.margin??-999)-(a.margin??-999));
+    box.innerHTML=`<div class="table-wrap"><table>
+      <thead><tr><th>漁場</th><th>生簀数</th><th>売上合計</th><th>コスト合計</th><th>粗利合計</th><th>粗利率</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td><strong>${r.name}</strong></td>
+        <td style="text-align:center">${r.cageCount}</td>
+        <td>¥${fmtNum(r.sales)}</td><td>¥${fmtNum(r.cost)}</td>
+        <td style="color:${r.profit>=0?'var(--ok)':'var(--danger)'};font-weight:600">${r.profit<0?'-':''}¥${fmtNum(Math.abs(r.profit))}</td>
+        <td>${marginBarHtml(r.margin)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+
+  }else if(sub==='monthly'){
+    const months=[];
+    if(from&&to){
+      const d=new Date(from.slice(0,7)+'-01'); const end=to.slice(0,7);
+      while(fmtLocalDate(d).slice(0,7)<=end){months.push(fmtLocalDate(d).slice(0,7)); d.setMonth(d.getMonth()+1);}
+    }else{for(let i=11;i>=0;i--) months.push(monthKeyLocal(-i));}
+    const mData=months.map(m=>{
+      const mFrom=m+'-01',mTo=monthLastDay(m);
+      const sales=ships.filter(s=>s.date>=mFrom&&s.date<=mTo).reduce((s,sh)=>s+sh.amount,0);
+      const cost=getAllCost(mFrom,mTo).total;
+      const profit=sales-cost;
+      return{m,sales,cost,profit,margin:sales?Math.round(profit/sales*100):null};
+    });
+    if(plMarginMonthChart){plMarginMonthChart.destroy();plMarginMonthChart=null;}
+    box.innerHTML=`<div style="margin-bottom:16px"><canvas id="marginMonthChart" style="max-height:260px"></canvas></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>月</th><th>売上</th><th>コスト</th><th>粗利</th><th>粗利率</th></tr></thead>
+        <tbody>${mData.map(r=>`<tr>
+          <td><strong>${r.m.slice(5)}月</strong></td>
+          <td>¥${fmtNum(r.sales)}</td><td>¥${fmtNum(r.cost)}</td>
+          <td style="color:${r.profit>=0?'var(--ok)':'var(--danger)'};font-weight:600">${r.profit<0?'-':''}¥${fmtNum(Math.abs(r.profit))}</td>
+          <td>${marginBarHtml(r.margin)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+    const ctx=$('marginMonthChart');
+    if(ctx) plMarginMonthChart=new Chart(ctx.getContext('2d'),{
+      type:'bar',
+      data:{labels:mData.map(r=>r.m.slice(5)+'月'),datasets:[
+        {label:'売上',   data:mData.map(r=>r.sales),backgroundColor:'rgba(58,181,160,.7)',borderRadius:3},
+        {label:'コスト', data:mData.map(r=>r.cost), backgroundColor:'rgba(192,57,43,.65)',borderRadius:3},
+        {type:'line',label:'粗利率(%)',data:mData.map(r=>r.margin),yAxisID:'y2',
+         borderColor:'rgba(201,150,42,1)',backgroundColor:'transparent',
+         pointBackgroundColor:'rgba(201,150,42,1)',tension:.3,pointRadius:4},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},
+        scales:{
+          y:{ticks:{callback:v=>v>=10000?(v/10000).toFixed(0)+'万':v,font:{size:11}},grid:{color:'rgba(180,200,210,.12)'}},
+          y2:{position:'right',title:{display:true,text:'粗利率(%)'},ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}},
+          x:{ticks:{font:{size:11}},grid:{display:false}}
+        }
+      }
+    });
+  }
+}
+
 function getMonthStats(m){
   const key=m+'|'+dataSig();
   if(monthCostCache.has(key)) return monthCostCache.get(key);
