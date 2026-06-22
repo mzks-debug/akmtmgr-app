@@ -2309,13 +2309,27 @@ async function fsPut(key, value){
     console.error('Firestoreへの保存に失敗しました（オフラインの可能性があります）', key, e);
   }
 }
-// 起動時：Firestoreから全キーを1回読み込む
+// fsApplyingRemoteチェックを迂回してFirestoreへ直接書き込む（バックアップ復元専用）
+async function fsPutDirect(key, value){
+  if(!fsSyncEnabled) return;
+  try{
+    const { setDoc, serverTimestamp } = window.firebaseBridge;
+    await setDoc(fsDocRef(key), { value, updatedAt: serverTimestamp(), updatedBy: fsUser?.email||'', sessionId: FS_SESSION_ID });
+  }catch(e){
+    console.error('Firestore復元書き込みに失敗しました', key, e);
+  }
+}
+// 起動時：Firestoreから全キーを1回読み込む（value + updatedAt を両方取得）
 async function fsGetAll(){
   const { getDocs, collection } = window.firebaseBridge;
   const out={};
   try{
     const snap=await getDocs(collection(window.firebaseBridge.db, 'workspaces', FS_WORKSPACE, 'data'));
-    snap.forEach(d=>{ out[d.id]=d.data().value; });
+    snap.forEach(d=>{
+      const data=d.data();
+      // value と updatedAt（Firestoreサーバータイムスタンプ）を両方保持
+      out[d.id]={ value: data.value, updatedAt: data.updatedAt?.toMillis?.() || 0 };
+    });
   }catch(e){
     console.error('Firestoreからの読み込みに失敗しました',e);
     return null;
@@ -2563,11 +2577,22 @@ const load = k => {
   // 事前ロードに無ければ、移行直後の互換性のためLocalStorageも一応参照する
   try{ const raw=localStorage.getItem(k); return raw?JSON.parse(raw):null; }catch{ return null; }
 };
+// ─── ローカルタイムスタンプ管理（Firestoreとの新旧比較用） ──────
+// save()のたびに「いつローカルを更新したか」を記録しておく。
+// 起動時にFirestoreのupdatedAtと比較し、新しい方を採用することで
+// リロード時にFirestoreの旧データでローカルが上書きされるのを防ぐ。
+const FS_LOCAL_TS_KEY='aq_local_timestamps';
+function getLocalTimestamps(){ return idbPreloadCache[FS_LOCAL_TS_KEY]||{}; }
+function setLocalTimestamp(key){
+  const ts=getLocalTimestamps();
+  ts[key]=Date.now();
+  idbPreloadCache[FS_LOCAL_TS_KEY]=ts;
+  idbPut(FS_LOCAL_TS_KEY,ts);
+}
 const save = (k,v) => {
   idbPreloadCache[k]=v;
   idbPut(k,v);
-  // リモートからのデータ反映中（fsApplyingRemote=true）はFirestoreへの書き戻しを行わない。
-  // これをしないと「Firestoreから受け取る→saveで書き戻す→onSnapshotが発火」の無限ループになる。
+  setLocalTimestamp(k); // ローカルの書き込み時刻を記録（Firestoreとの新旧比較に使う）
   if(!fsApplyingRemote) fsPut(k,v);
   invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache(); checkStorageQuota();
 };
@@ -4841,13 +4866,28 @@ async function applyBackupData(d){
     [KEYS.costItems,costItems],[KEYS.settings,settings],[KEYS.oplog,oplog],
     [KEYS.transfers,transfers],[KEYS.grounds,grounds],[KEYS.feedTypes,feedTypes]
   ];
+
+  // idbPreloadCacheを先に全更新（画面反映用）
   for(const [k,v] of pairs){
     idbPreloadCache[k]=v;
   }
   invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
-  // 書き込みは直列キューで実行し、すべて完了するまで待つ（途中失敗を確実に検知するため）
+
+  // IndexedDBへ書き込み（全件完了を待つ）+ ローカルタイムスタンプを更新
   for(const [k,v] of pairs){
     await idbPut(k,v);
+    setLocalTimestamp(k); // Firestoreより新しいとみなされるようにタイムスタンプを記録
+  }
+
+  // Firestoreへも書き込む（バックアップ読み込み時はsave()を経由しないため、ここで明示的に書く）
+  // onSnapshotで旧データが返ってきて上書きされないよう、書き込み中はfsApplyingRemoteをtrueにする
+  if(fsSyncEnabled){
+    const wasApplying=fsApplyingRemote;
+    fsApplyingRemote=true; // onSnapshotをブロック
+    for(const [k,v] of pairs){
+      await fsPutDirect(k,v); // fsApplyingRemoteチェックを迂回する専用関数
+    }
+    fsApplyingRemote=wasApplying;
   }
 }
 function showRestoreProgress(msg='バックアップを復元しています…'){
@@ -4863,14 +4903,25 @@ function restoreLargeBackup(d,done){
   showRestoreProgress();
   setTimeout(async ()=>{
     try{
+      // 復元中はonSnapshotを一時停止（Firestoreの旧データが返ってきて上書きされるのを防ぐ）
+      fsStopListening();
+
       await applyBackupData(d);
+
+      // Firestoreへの書き込みキューが完全に完了するまで待つ
+      await idbWriteQueue;
+
       setTimeout(()=>{
         hideRestoreProgress();
         checkStorageQuota();
+        // 書き込み完了後にonSnapshotを再開（ただし初回スナップショットは再びスキップが必要）
+        if(fsSyncEnabled) fsStartListening();
         done&&done(true);
-      },80);
+      },500); // 500ms待ってFirestoreへの書き込みが確実に反映されてから再開
     }catch(err){
       hideRestoreProgress();
+      // エラー時もonSnapshotを再開
+      if(fsSyncEnabled) fsStartListening();
       console.error(err);
       const msg=String(err&&err.message||err);
       if(msg.includes('Quota')||msg.includes('quota')||msg.includes('exceeded')){
@@ -5059,40 +5110,53 @@ function waitForFirebaseBridge(){
   });
 }
 // ログイン済みになったら、Firestoreの最新データを取り込み、以降はリアルタイム同期する
-let fsSyncStarted=false; // startFirestoreSyncを1度だけ実行するためのフラグ
+let fsSyncStarted=false;
 
 async function startFirestoreSync(){
-  // onAuthStateChangedはトークンリフレッシュ（1時間ごと）でも再呼び出しされる。
-  // そのたびにfsGetAll()→上書きが走るとデータが消えるため、初回のみ実行する。
   if(fsSyncStarted) return;
   fsSyncStarted=true;
-
   fsSyncEnabled=true;
   try{
-    // 未完了の書き込みがある場合、完了を待ってからFirestoreを読み込む
-    // （save()→fsPut()は非同期投げっぱなしのため、読み返す前に完了させる必要がある）
     await idbWriteQueue;
-
     const remote=await fsGetAll();
-    if(remote && Object.keys(remote).length>0){
-      // Firestoreにデータがある → ローカルに反映
-      fsApplyingRemote=true;
-      for(const [k,v] of Object.entries(remote)){
-        idbPreloadCache[k]=v;
-        idbPut(k,v);
-      }
-      fsApplyingRemote=false;
-      reloadStateFromStore();
-      invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
-      showPage(curPage||'dash');
-    }else if(remote!==null){
-      // Firestore側が空＝初回利用。ローカルデータをアップロードしてから監視を開始する
+    if(remote===null){
+      // Firestore読み込み失敗（オフライン等）→ ローカルのまま継続
+    } else if(Object.keys(remote).length===0){
+      // Firestore空 = 初回利用 → ローカルをアップロード
       for(const k of Object.values(KEYS).concat(['aq_backups'])){
-        if(idbPreloadCache[k]!==undefined) await idbPut(k, idbPreloadCache[k]);
+        if(idbPreloadCache[k]!==undefined) await fsPutDirect(k,idbPreloadCache[k]);
+      }
+    } else {
+      // タイムスタンプ比較：新しい方を採用
+      const localTs=getLocalTimestamps();
+      let anyUpdated=false;
+      for(const [k,remoteDoc] of Object.entries(remote)){
+        const remoteTime=remoteDoc.updatedAt||0;
+        const localTime=localTs[k]||0;
+        if(remoteTime>localTime){
+          // Firestoreが新しい（他端末の変更）→ ローカルを上書き
+          idbPreloadCache[k]=remoteDoc.value;
+          idbPut(k,remoteDoc.value);
+          anyUpdated=true;
+        } else if(localTime>0 && localTime>=remoteTime){
+          // ローカルが新しいか同じ（自分の変更）→ Firestoreへ書き戻し
+          if(idbPreloadCache[k]!==undefined) await fsPutDirect(k,idbPreloadCache[k]);
+        }
+      }
+      // Firestoreにないキーをアップロード
+      for(const k of Object.values(KEYS)){
+        if(!(k in remote)&&idbPreloadCache[k]!==undefined){
+          await fsPutDirect(k,idbPreloadCache[k]);
+        }
+      }
+      if(anyUpdated){
+        reloadStateFromStore();
+        invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
+        showPage(curPage||'dash');
       }
     }
   }catch(e){
-    console.error('Firestore初回同期に失敗しました（オフラインの可能性）',e);
+    console.error('Firestore初回同期に失敗しました',e);
   }
   fsStartListening();
 }
