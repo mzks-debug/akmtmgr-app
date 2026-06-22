@@ -67,13 +67,47 @@
   --tab-h:     62px;
 }
 [data-theme="dark"] {
-  --bg:#0E1B27; --surface:#172330; --surface2:#1D2E3E;
-  --border:#2A3D50; --border-l:#223040;
-  --tx:#E0EAF2; --tx-s:#8AAAC0; --tx-m:#506878;
-  --navy:#0D1925; --navy2:#142030;
-  --aqua-l:#0E2A26; --ok-l:#0E2518; --warn-l:#2A1900;
-  --danger-l:#2A0E0C; --info-l:#0E1F35;
-  --sh-xs:0 1px 3px rgba(0,0,0,.3); --sh-sm:0 2px 8px rgba(0,0,0,.35); --sh-md:0 4px 18px rgba(0,0,0,.45);
+  /* 背景：深すぎず、青みを抑えたダークグレー系 */
+  --bg:       #131A23;
+  --surface:  #1C2734;
+  --surface2: #243140;
+
+  /* ボーダー：明確だが主張しすぎない */
+  --border:   #334455;
+  --border-l: #2A3B4C;
+
+  /* テキスト：階層が明確で読みやすい */
+  --tx:   #DDE8F0;   /* メインテキスト：やや青みがかった白 */
+  --tx-s: #90ABBE;   /* サブテキスト：コントラスト比を底上げ */
+  --tx-m: #607A8E;   /* 補助テキスト：以前より明るく */
+
+  /* サイドバー・ヘッダー：表面と差をつける */
+  --navy:  #0F1920;
+  --navy2: #172230;
+
+  /* アクセントカラー：ダーク背景向けに輝度を上げる */
+  --aqua:    #3FC7B0;  /* ライトより少し明るく */
+  --aqua-d:  #35AB98;
+  --gold:    #D4A43A;  /* 黄金色、視認性アップ */
+  --info:    #5BA8D4;
+
+  /* セマンティックカラー：鮮やかすぎず、背景に溶け込まない調整 */
+  --ok:      #3DBF72;
+  --warn:    #E8863A;
+  --danger:  #E05252;
+
+  /* 薄い背景色（アラート・バッジ等）：暗すぎず要素が浮いて見える程度に */
+  --aqua-l:   #0D2B27;
+  --ok-l:     #0D2820;
+  --warn-l:   #2B1E0A;
+  --danger-l: #2B1010;
+  --info-l:   #0D2035;
+  --gold-l:   #2B2008;
+
+  /* シャドウ：黒ベースで深みを出す */
+  --sh-xs: 0 1px 3px rgba(0,0,0,.45);
+  --sh-sm: 0 2px 10px rgba(0,0,0,.5);
+  --sh-md: 0 4px 20px rgba(0,0,0,.6);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:14px;-webkit-text-size-adjust:100%;}
@@ -211,6 +245,32 @@ button{cursor:pointer;} a{color:inherit;text-decoration:none;}
 .form-group textarea{height:72px;resize:vertical;}
 .form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
 [data-theme="dark"] .form-group input,[data-theme="dark"] .form-group select,[data-theme="dark"] .form-group textarea{background:var(--surface);color:var(--tx);border-color:var(--border);}
+
+/* ダークモード追加スタイル */
+[data-theme="dark"] .card{border-color:var(--border-l);box-shadow:var(--sh-sm);}
+[data-theme="dark"] thead tr{background:rgba(255,255,255,.04);}
+[data-theme="dark"] tbody tr:hover td{background:rgba(255,255,255,.04);}
+[data-theme="dark"] .modal-card{background:var(--surface);border:1px solid var(--border);}
+[data-theme="dark"] .kpi{border-color:var(--border-l);}
+[data-theme="dark"] .btn-ghost{background:transparent;border-color:var(--border);color:var(--tx-s);}
+[data-theme="dark"] .btn-ghost:hover{background:var(--surface2);}
+[data-theme="dark"] select{background:var(--surface);color:var(--tx);border-color:var(--border);}
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]){background:var(--surface);color:var(--tx);border-color:var(--border);}
+[data-theme="dark"] input::placeholder{color:var(--tx-m);}
+[data-theme="dark"] .settings-tab{color:var(--tx-s);}
+[data-theme="dark"] .settings-tab.active{background:var(--surface2);color:var(--aqua);}
+[data-theme="dark"] .pl-tab{color:var(--tx-s);}
+[data-theme="dark"] .pl-tab.active,.pl-tab.active{color:var(--aqua);}
+[data-theme="dark"] .save-toast{background:var(--surface2);color:var(--tx);border:1px solid var(--border);}
+[data-theme="dark"] .sync-status-box{background:var(--surface2);}
+[data-theme="dark"] .fcr-filter-wrap{border-color:var(--border);}
+[data-theme="dark"] .fcr-filter-header{background:var(--surface2);color:var(--tx-s);}
+[data-theme="dark"] .margin-subtab{color:var(--tx-m);}
+[data-theme="dark"] .margin-subtab.active{color:var(--aqua);}
+[data-theme="dark"] .alert-info{background:var(--info-l);border-left-color:var(--info);}
+[data-theme="dark"] .alert-warn{background:var(--warn-l);border-left-color:var(--warn);}
+[data-theme="dark"] .alert-danger,.danger-banner{background:var(--danger-l);}
+[data-theme="dark"] .chart-box{background:transparent;}
 
 /* テーブル */
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
