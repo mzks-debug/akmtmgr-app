@@ -2246,6 +2246,9 @@ function hideUndoToast(){
 // IndexedDBは「オフラインでもすぐ開ける表示用キャッシュ」として引き続き使う。
 // Firestoreが正（最新の真実）で、IndexedDBはその写し、という位置づけ。
 const FS_WORKSPACE='akamatsu'; // 社内共有スペース名（固定）
+// セッションIDはタブを開くたびに新しく生成される（リロードでも変わる）。
+// これにより「自分のこのタブからの書き込み」を正確に識別してonSnapshotでスキップできる。
+const FS_SESSION_ID=Math.random().toString(36).slice(2,12);
 let fsUser=null;          // ログイン中のユーザー（Firebase Authのuserオブジェクト）
 let fsUnsubscribers=[];   // onSnapshotの監視解除関数を保持
 let fsApplyingRemote=false; // リモートからの反映中に自分のsave()を誤発火させないためのフラグ
@@ -2260,7 +2263,7 @@ async function fsPut(key, value){
   if(!fsSyncEnabled || fsApplyingRemote) return;
   try{
     const { setDoc, serverTimestamp } = window.firebaseBridge;
-    await setDoc(fsDocRef(key), { value, updatedAt: serverTimestamp(), updatedBy: fsUser?.email||'' });
+    await setDoc(fsDocRef(key), { value, updatedAt: serverTimestamp(), updatedBy: fsUser?.email||'', sessionId: FS_SESSION_ID });
   }catch(e){
     console.error('Firestoreへの保存に失敗しました（オフラインの可能性があります）', key, e);
   }
@@ -2288,12 +2291,17 @@ function fsStartListening(){
     snap.docChanges().forEach(change=>{
       const key=change.doc.id;
       if(change.type==='removed') return;
-      const newValue=change.doc.data().value;
+      const docData=change.doc.data();
+      // 自分自身のこのタブからの書き込みによるスナップショットはスキップ
+      // （メールアドレスではなくセッションIDで判定することで、同じアカウントの他端末は正しく受け取れる）
+      if(docData.sessionId && docData.sessionId===FS_SESSION_ID) return;
+      const newValue=docData.value;
+      // value フィールドのみで差分を判断（updatedAt等のメタデータ変化は無視）
       const before=JSON.stringify(idbPreloadCache[key]);
       const after=JSON.stringify(newValue);
       if(before!==after){
         idbPreloadCache[key]=newValue;
-        idbPut(key,newValue); // 受け取った最新をローカルキャッシュ(IndexedDB)にも保存
+        idbPut(key,newValue);
         changed=true;
       }
     });
@@ -2335,7 +2343,7 @@ async function fsDeleteKey(key){
     const { setDoc, serverTimestamp } = window.firebaseBridge;
     // Firestoreのドキュメント自体を消すと再生成のタイミングでルール上の扱いが複雑になるため、
     // 値を空配列/nullにして「空である」ことを明示する方式にする。
-    await setDoc(fsDocRef(key), { value: Array.isArray(idbPreloadCache[key])?[]:null, updatedAt: serverTimestamp(), updatedBy: fsUser?.email||'', deleted:true });
+    await setDoc(fsDocRef(key), { value: Array.isArray(idbPreloadCache[key])?[]:null, updatedAt: serverTimestamp(), updatedBy: fsUser?.email||'', sessionId: FS_SESSION_ID, deleted:true });
   }catch(e){
     console.error('Firestoreからの削除に失敗しました', key, e);
   }
