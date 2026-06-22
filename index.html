@@ -1704,7 +1704,7 @@ input,select,textarea{max-width:100%;min-width:0}
 
   <div id="pl-fcrtrend" class="pl-pane" style="display:none">
     <div class="card">
-      <div class="card-hd"><div class="card-hd-l">FCR推移</div><button class="btn btn-ghost btn-sm" onclick="exportFcrCsv()">CSVダウンロード</button></div>
+      <div class="card-hd"><div class="card-hd-l">FCR推移</div></div>
       <div class="alert alert-info" style="margin-bottom:12px">測量日ごとの増肉係数を表示します。FCRは低いほど、餌が魚体増加につながっている状態です。異常値（FCR&lt;0.5または&gt;10）は自動的に除外します。</div>
       <!-- 生簀フィルター -->
       <div id="fcrCageFilter" style="margin-bottom:14px"></div>
@@ -1947,6 +1947,12 @@ input,select,textarea{max-width:100%;min-width:0}
         <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         コスト記録をExcel(CSV)出力
       </button>
+      <div style="height:1px;background:var(--bd);margin:4px 0"></div>
+      <button class="btn btn-ghost" onclick="exportFcrCsv({allData:true})">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        FCR推移をExcel(CSV)出力（ピボット分析用）
+      </button>
+      <div style="font-size:12px;color:var(--tx-m);margin-top:-4px;padding-left:2px">全期間・全生簀のFCR・給餌量・増重量・水温・季節情報を含むCSVです。</div>
     </div>
   </div>
 
@@ -2320,18 +2326,25 @@ async function fsGetAll(){
 function fsStartListening(){
   const { onSnapshot, collection } = window.firebaseBridge;
   const ref=collection(window.firebaseBridge.db, 'workspaces', FS_WORKSPACE, 'data');
+  // onSnapshotは接続直後に全ドキュメントを"added"として一括配信する（初回スナップショット）。
+  // この時点ではfsGetAll()で既にデータを取得・反映済みのため、初回配信は丸ごとスキップする。
+  // 2回目以降の配信（実際の変更通知）からのみ処理する。
+  let isFirstSnapshot=true;
+
   const unsub=onSnapshot(ref, (snap)=>{
+    if(isFirstSnapshot){
+      isFirstSnapshot=false;
+      return; // 初回の全件配信はスキップ
+    }
     let changed=false;
     fsApplyingRemote=true;
     snap.docChanges().forEach(change=>{
       const key=change.doc.id;
       if(change.type==='removed') return;
       const docData=change.doc.data();
-      // 自分自身のこのタブからの書き込みによるスナップショットはスキップ
-      // （メールアドレスではなくセッションIDで判定することで、同じアカウントの他端末は正しく受け取れる）
+      // 自分自身のこのタブからの書き込みはスキップ（セッションIDで識別）
       if(docData.sessionId && docData.sessionId===FS_SESSION_ID) return;
       const newValue=docData.value;
-      // value フィールドのみで差分を判断（updatedAt等のメタデータ変化は無視）
       const before=JSON.stringify(idbPreloadCache[key]);
       const after=JSON.stringify(newValue);
       if(before!==after){
@@ -4007,11 +4020,15 @@ function getFCRSeries(cageId,from,to){
   return out;
 }
 
-function exportFcrCsv(){
+function exportFcrCsv(opts={}){
   // ピボットテーブル分析用FCR推移CSV出力
-  // 現在の期間フィルター・生簀フィルターを反映する
-  const from=$('plFrom')?.value||null;
-  const to=$('plTo')?.value||null;
+  // opts.allData=true のとき全期間・全生簀を出力（設定→データ出力から呼ばれる場合）
+  // それ以外はFCR推移ページの現在のフィルターを反映する
+  const from=opts.allData?null:($('plFrom')?.value||null);
+  const to=opts.allData?null:($('plTo')?.value||null);
+  const targetCages=opts.allData
+    ?activeCages()
+    :activeCages().filter(c=>!fcrSelectedCages||fcrSelectedCages.has(c.id));
 
   const FCR_MIN=0.5, FCR_MAX=10;
 
@@ -4029,7 +4046,7 @@ function exportFcrCsv(){
   ];
 
   const rows=[];
-  const targetCages=activeCages().filter(c=>!fcrSelectedCages||fcrSelectedCages.has(c.id));
+  // targetCagesは上のopts分岐で定義済み
 
   targetCages.forEach(cage=>{
     const ground=grounds.find(g=>g.id===cage.groundId);
