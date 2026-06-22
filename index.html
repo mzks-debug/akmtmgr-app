@@ -957,6 +957,41 @@ input,select,textarea{max-width:100%;min-width:0}
   padding:0 2px;
 }
 
+/* FCR生簀フィルター：タグ型ボタン */
+.fcr-filter-wrap{
+  margin-bottom:10px;
+  border:1px solid var(--bd);
+  border-radius:var(--r-md);
+  overflow:hidden;
+}
+.fcr-filter-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;cursor:pointer;
+  background:var(--surface2);
+  font-size:13px;font-weight:700;color:var(--tx-s);
+  user-select:none;
+}
+.fcr-filter-header:active{background:var(--bd);}
+.fcr-filter-body{padding:10px 12px;display:none;}
+.fcr-filter-body.open{display:block;}
+.fcr-quick-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.fcr-quick-btn{
+  padding:4px 10px;border-radius:999px;border:1.5px solid var(--bd);
+  background:var(--surface);font-size:12px;cursor:pointer;font-weight:600;color:var(--tx-s);
+}
+.fcr-quick-btn:active{background:var(--surface2);}
+.fcr-cage-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.fcr-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:999px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  border:2px solid transparent;
+  transition:opacity .15s;
+}
+.fcr-tag.on{ opacity:1; }
+.fcr-tag.off{ opacity:0.32; filter:grayscale(0.5); }
+.fcr-tag-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
 /* ログイン画面 */
 .login-overlay{
   position:fixed;inset:0;z-index:200000;
@@ -1669,7 +1704,7 @@ input,select,textarea{max-width:100%;min-width:0}
 
   <div id="pl-fcrtrend" class="pl-pane" style="display:none">
     <div class="card">
-      <div class="card-hd"><div class="card-hd-l">FCR推移</div></div>
+      <div class="card-hd"><div class="card-hd-l">FCR推移</div><button class="btn btn-ghost btn-sm" onclick="exportFcrCsv()">CSVダウンロード</button></div>
       <div class="alert alert-info" style="margin-bottom:12px">測量日ごとの増肉係数を表示します。FCRは低いほど、餌が魚体増加につながっている状態です。異常値（FCR&lt;0.5または&gt;10）は自動的に除外します。</div>
       <!-- 生簀フィルター -->
       <div id="fcrCageFilter" style="margin-bottom:14px"></div>
@@ -3972,51 +4007,169 @@ function getFCRSeries(cageId,from,to){
   return out;
 }
 
+function exportFcrCsv(){
+  // ピボットテーブル分析用FCR推移CSV出力
+  // 現在の期間フィルター・生簀フィルターを反映する
+  const from=$('plFrom')?.value||null;
+  const to=$('plTo')?.value||null;
+
+  const FCR_MIN=0.5, FCR_MAX=10;
+
+  // ヘッダー行（ピボット分析に必要な全フィールド）
+  const headers=[
+    '測量日','前回測量日','期間日数',
+    '生簀名','漁場名','魚種',
+    '年','月','四半期','季節',
+    '給餌量(kg)','増重量(kg)','FCR',
+    '出荷重量(kg)','分養出し(kg)','分養入り(kg)',
+    '期末平均体重(kg)','期末在池推計尾数',
+    '死亡尾数（期間合計）',
+    '水温平均(℃)','水温最高(℃)','水温最低(℃)',
+    'FCR異常値フラグ'
+  ];
+
+  const rows=[];
+  const targetCages=activeCages().filter(c=>!fcrSelectedCages||fcrSelectedCages.has(c.id));
+
+  targetCages.forEach(cage=>{
+    const ground=grounds.find(g=>g.id===cage.groundId);
+    const sp=species.find(s=>s.id===cage.speciesId);
+    const groundName=ground?.name||'未設定';
+    const spName=sp?.name||cage.speciesText||'';
+
+    const series=getFCRSeries(cage.id, from, to);
+
+    series.forEach(row=>{
+      if(!row.prevDate||row.prevDate==='開始') return; // 初回測量は前期間がないためスキップ
+
+      const d=new Date(row.date);
+      const year=d.getFullYear();
+      const month=d.getMonth()+1;
+      const quarter=Math.ceil(month/3);
+      const season=month>=3&&month<=5?'春':month>=6&&month<=8?'夏':month>=9&&month<=11?'秋':'冬';
+
+      const days=row.prevDate&&row.prevDate!=='開始'
+        ?Math.round((new Date(row.date)-new Date(row.prevDate))/(1000*60*60*24))
+        :null;
+
+      // 期間中の水温統計
+      const periodRecs=(records||[]).filter(r=>
+        r.cageId===cage.id&&r.date>row.prevDate&&r.date<=row.date&&r.temp!=null&&Number(r.temp)>0
+      );
+      const temps=periodRecs.map(r=>Number(r.temp)).filter(Number.isFinite);
+      const tempAvg=temps.length?Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10:null;
+      const tempMax=temps.length?Math.max(...temps):null;
+      const tempMin=temps.length?Math.min(...temps):null;
+
+      // 期間中の死亡尾数合計
+      const periodDead=(records||[]).filter(r=>
+        r.cageId===cage.id&&r.date>row.prevDate&&r.date<=row.date
+      ).reduce((s,r)=>s+(Number(r.dead)||0),0);
+
+      const fcrValid=row.fcr!==null&&Number.isFinite(row.fcr)&&row.fcr>=FCR_MIN&&row.fcr<=FCR_MAX;
+      const fcrOutlier=row.fcr!==null&&Number.isFinite(row.fcr)&&(row.fcr<FCR_MIN||row.fcr>FCR_MAX);
+
+      rows.push([
+        row.date,
+        row.prevDate,
+        days??'',
+        cage.name,
+        groundName,
+        spName,
+        year,
+        month,
+        `Q${quarter}`,
+        season,
+        row.feed!=null?Math.round(row.feed*10)/10:'',
+        row.gain!=null&&Number.isFinite(row.gain)?Math.round(row.gain*10)/10:'',
+        row.fcr!=null&&Number.isFinite(row.fcr)?Math.round(row.fcr*100)/100:'',
+        row.shipped!=null?Math.round(row.shipped*10)/10:'',
+        row.transferOut!=null?Math.round(row.transferOut*10)/10:'',
+        row.transferIn!=null?Math.round(row.transferIn*10)/10:'',
+        row.cur?.avgWeight!=null?Math.round(row.cur.avgWeight*1000)/1000:'',
+        row.cur?.count!=null?row.cur.count:'',
+        periodDead,
+        tempAvg??'',
+        tempMax??'',
+        tempMin??'',
+        fcrOutlier?'異常値':''
+      ]);
+    });
+  });
+
+  if(!rows.length){toast('出力対象のFCRデータがありません');return;}
+
+  // CSVテキスト生成（UTF-8 BOM付き：Excelで文字化けしないよう）
+  const escape=v=>{
+    const s=String(v??'');
+    return s.includes(',')||s.includes('"')||s.includes('\n')?`"${s.replace(/"/g,'""')}"`:s;
+  };
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(escape).join(',')).join('\n');
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const dateStr=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.href=url; a.download=`FCR推移_${dateStr}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toast('CSVをダウンロードしました');
+  addLog('CSV出力','FCR推移CSV');
+}
+
 // FCR推移：選択中の生簀IDセット（null=未初期化→全選択）
 let fcrSelectedCages=null;
 
 function renderFcrCageFilter(){
   const el=$('fcrCageFilter'); if(!el) return;
-  const cages=activeCages();
-  // 未初期化なら全選択
-  if(!fcrSelectedCages) fcrSelectedCages=new Set(cages.map(c=>c.id));
-
-  // 魚種グループ
-  const spGroups={};
-  cages.forEach(c=>{
-    const spName=c.speciesText||species.find(s=>s.id===c.speciesId)?.name||'その他';
-    if(!spGroups[spName]) spGroups[spName]=[];
-    spGroups[spName].push(c);
-  });
+  const cageList=activeCages();
+  if(!fcrSelectedCages) fcrSelectedCages=new Set(cageList.map(c=>c.id));
 
   const colors=['#3AB5A0','#2B7BB9','#C9962A','#C0392B','#7E57C2','#607D8B','#009688','#795548','#455A64','#8BC34A','#FF9800','#9C27B0'];
   const colorMap={};
-  cages.forEach((c,i)=>colorMap[c.id]=colors[i%colors.length]);
+  cageList.forEach((c,i)=>colorMap[c.id]=colors[i%colors.length]);
 
-  let html=`<div style="font-size:12px;font-weight:700;color:var(--tx-s);margin-bottom:6px">表示する生簀を選択</div>`;
-  // 全選択・全解除ボタン
-  html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-    <button class="btn btn-ghost btn-sm" onclick="fcrFilterAll(true)">全選択</button>
-    <button class="btn btn-ghost btn-sm" onclick="fcrFilterAll(false)">全解除</button>`;
-  // 魚種別クイック選択
-  Object.keys(spGroups).forEach(spName=>{
-    html+=`<button class="btn btn-ghost btn-sm" onclick="fcrFilterBySpecies('${spName}')">${spName}のみ</button>`;
+  // 魚種グループ
+  const spGroups={};
+  cageList.forEach(c=>{
+    const sp=c.speciesText||species.find(s=>s.id===c.speciesId)?.name||'その他';
+    if(!spGroups[sp]) spGroups[sp]=[];
+    spGroups[sp].push(c);
   });
-  html+=`</div>`;
 
-  // 生簀チェックボックス（魚種グループ別）
-  html+=`<div style="display:flex;flex-wrap:wrap;gap:6px 12px">`;
-  cages.forEach(c=>{
-    const checked=fcrSelectedCages.has(c.id)?'checked':'';
-    const color=colorMap[c.id];
-    html+=`<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
-      <input type="checkbox" value="${c.id}" ${checked} onchange="fcrToggleCage('${c.id}',this.checked)" style="accent-color:${color}">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color}"></span>
-      ${c.name}
-    </label>`;
-  });
-  html+=`</div>`;
-  el.innerHTML=html;
+  const sel=fcrSelectedCages.size;
+  const total=cageList.length;
+  const summaryText=sel===total?'全生簀表示中':sel===0?'すべて非表示':`${sel}/${total}生簀表示中`;
+
+  // タグ行
+  const tagHtml=cageList.map(c=>{
+    const on=fcrSelectedCages.has(c.id);
+    const col=colorMap[c.id];
+    const bg=on?col+'22':'var(--surface2)';
+    const border=on?col:'var(--bd)';
+    return `<span class="fcr-tag ${on?'on':'off'}" style="background:${bg};border-color:${border}" onclick="fcrToggleCage('${c.id}',${!on})">
+      <span class="fcr-tag-dot" style="background:${col}"></span>${c.name}
+    </span>`;
+  }).join('');
+
+  // クイック選択行
+  const quickHtml=`<button class="fcr-quick-btn" onclick="fcrFilterAll(true)">全選択</button>
+    <button class="fcr-quick-btn" onclick="fcrFilterAll(false)">全解除</button>`+
+    Object.keys(spGroups).map(sp=>`<button class="fcr-quick-btn" onclick="fcrFilterBySpecies('${sp}')">${sp}</button>`).join('');
+
+  // 現在の開閉状態を保持
+  const wasOpen=el.querySelector('.fcr-filter-body.open')!=null;
+
+  el.innerHTML=`<div class="fcr-filter-wrap">
+    <div class="fcr-filter-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.fcr-arrow').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
+      <span>🔵 生簀フィルター <span style="font-weight:400;color:var(--tx-m);font-size:12px">— ${summaryText}</span></span>
+      <span class="fcr-arrow">${wasOpen?'▲':'▼'}</span>
+    </div>
+    <div class="fcr-filter-body${wasOpen?' open':''}">
+      <div class="fcr-quick-row">${quickHtml}</div>
+      <div class="fcr-cage-tags">${tagHtml}</div>
+    </div>
+  </div>`;
+
   return colorMap;
 }
 function fcrToggleCage(id,on){
