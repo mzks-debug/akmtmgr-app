@@ -2566,7 +2566,9 @@ const load = k => {
 const save = (k,v) => {
   idbPreloadCache[k]=v;
   idbPut(k,v);
-  fsPut(k,v); // 社内共有データとしてFirestoreへも書き込む（オフライン時は自動でキューされ、復帰後に送信される）
+  // リモートからのデータ反映中（fsApplyingRemote=true）はFirestoreへの書き戻しを行わない。
+  // これをしないと「Firestoreから受け取る→saveで書き戻す→onSnapshotが発火」の無限ループになる。
+  if(!fsApplyingRemote) fsPut(k,v);
   invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache(); checkStorageQuota();
 };
 
@@ -5057,11 +5059,23 @@ function waitForFirebaseBridge(){
   });
 }
 // ログイン済みになったら、Firestoreの最新データを取り込み、以降はリアルタイム同期する
+let fsSyncStarted=false; // startFirestoreSyncを1度だけ実行するためのフラグ
+
 async function startFirestoreSync(){
+  // onAuthStateChangedはトークンリフレッシュ（1時間ごと）でも再呼び出しされる。
+  // そのたびにfsGetAll()→上書きが走るとデータが消えるため、初回のみ実行する。
+  if(fsSyncStarted) return;
+  fsSyncStarted=true;
+
   fsSyncEnabled=true;
   try{
+    // 未完了の書き込みがある場合、完了を待ってからFirestoreを読み込む
+    // （save()→fsPut()は非同期投げっぱなしのため、読み返す前に完了させる必要がある）
+    await idbWriteQueue;
+
     const remote=await fsGetAll();
     if(remote && Object.keys(remote).length>0){
+      // Firestoreにデータがある → ローカルに反映
       fsApplyingRemote=true;
       for(const [k,v] of Object.entries(remote)){
         idbPreloadCache[k]=v;
@@ -5072,9 +5086,9 @@ async function startFirestoreSync(){
       invalidatePerfCaches(); if(typeof invalidatePLCache==='function') invalidatePLCache();
       showPage(curPage||'dash');
     }else if(remote!==null){
-      // Firestore側が空＝初回利用。今ローカルにあるデータを初期データとしてアップロードする。
+      // Firestore側が空＝初回利用。ローカルデータをアップロードしてから監視を開始する
       for(const k of Object.values(KEYS).concat(['aq_backups'])){
-        if(idbPreloadCache[k]!==undefined) fsPut(k, idbPreloadCache[k]);
+        if(idbPreloadCache[k]!==undefined) await idbPut(k, idbPreloadCache[k]);
       }
     }
   }catch(e){
