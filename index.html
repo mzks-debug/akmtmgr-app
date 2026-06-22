@@ -1670,7 +1670,9 @@ input,select,textarea{max-width:100%;min-width:0}
   <div id="pl-fcrtrend" class="pl-pane" style="display:none">
     <div class="card">
       <div class="card-hd"><div class="card-hd-l">FCR推移</div></div>
-      <div class="alert alert-info" style="margin-bottom:12px">測量日ごとの増肉係数を表示します。FCRは低いほど、餌が魚体増加につながっている状態です。</div>
+      <div class="alert alert-info" style="margin-bottom:12px">測量日ごとの増肉係数を表示します。FCRは低いほど、餌が魚体増加につながっている状態です。異常値（FCR&lt;0.5または&gt;10）は自動的に除外します。</div>
+      <!-- 生簀フィルター -->
+      <div id="fcrCageFilter" style="margin-bottom:14px"></div>
       <div class="chart-box lg"><canvas id="plFcrTrendChart"></canvas></div>
       <div id="plFcrTrendTable"></div>
     </div>
@@ -3218,10 +3220,16 @@ function renderDash(){
 
   // アラート
   const alerts=[];
-  activeCages().forEach(cage=>{
-    if(!records.find(r=>r.cageId===cage.id&&r.date===td))
-      alerts.push({type:'warn',msg:`${cage.name}：本日の記録が未入力です`});
-  });
+  // C+A：11時以降のみ未入力アラートを出す。複数生簀はまとめて1行に集約。
+  const nowHour=new Date().getHours();
+  if(nowHour>=11){
+    const unrecorded=activeCages().filter(cage=>!records.find(r=>r.cageId===cage.id&&r.date===td));
+    if(unrecorded.length===1){
+      alerts.push({type:'warn',msg:`${unrecorded[0].name}：本日の記録が未入力です`});
+    }else if(unrecorded.length>1){
+      alerts.push({type:'warn',msg:`本日の記録が未入力の生簀が ${unrecorded.length} 件あります（${unrecorded.map(c=>c.name).join('・')}）`});
+    }
+  }
   const fifo=calcFifo();
   const last7Feed=records.filter(r=>r.date>=daysAgo(7)).reduce((sum,r)=>sum+(r.feed||0),0);
   const avgDailyFeed=last7Feed/7;
@@ -3956,10 +3964,166 @@ function getFCRSeries(cageId,from,to){
   return out;
 }
 
+// FCR推移：選択中の生簀IDセット（null=未初期化→全選択）
+let fcrSelectedCages=null;
+
+function renderFcrCageFilter(){
+  const el=$('fcrCageFilter'); if(!el) return;
+  const cages=activeCages();
+  // 未初期化なら全選択
+  if(!fcrSelectedCages) fcrSelectedCages=new Set(cages.map(c=>c.id));
+
+  // 魚種グループ
+  const spGroups={};
+  cages.forEach(c=>{
+    const spName=c.speciesText||species.find(s=>s.id===c.speciesId)?.name||'その他';
+    if(!spGroups[spName]) spGroups[spName]=[];
+    spGroups[spName].push(c);
+  });
+
+  const colors=['#3AB5A0','#2B7BB9','#C9962A','#C0392B','#7E57C2','#607D8B','#009688','#795548','#455A64','#8BC34A','#FF9800','#9C27B0'];
+  const colorMap={};
+  cages.forEach((c,i)=>colorMap[c.id]=colors[i%colors.length]);
+
+  let html=`<div style="font-size:12px;font-weight:700;color:var(--tx-s);margin-bottom:6px">表示する生簀を選択</div>`;
+  // 全選択・全解除ボタン
+  html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    <button class="btn btn-ghost btn-sm" onclick="fcrFilterAll(true)">全選択</button>
+    <button class="btn btn-ghost btn-sm" onclick="fcrFilterAll(false)">全解除</button>`;
+  // 魚種別クイック選択
+  Object.keys(spGroups).forEach(spName=>{
+    html+=`<button class="btn btn-ghost btn-sm" onclick="fcrFilterBySpecies('${spName}')">${spName}のみ</button>`;
+  });
+  html+=`</div>`;
+
+  // 生簀チェックボックス（魚種グループ別）
+  html+=`<div style="display:flex;flex-wrap:wrap;gap:6px 12px">`;
+  cages.forEach(c=>{
+    const checked=fcrSelectedCages.has(c.id)?'checked':'';
+    const color=colorMap[c.id];
+    html+=`<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px">
+      <input type="checkbox" value="${c.id}" ${checked} onchange="fcrToggleCage('${c.id}',this.checked)" style="accent-color:${color}">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color}"></span>
+      ${c.name}
+    </label>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+  return colorMap;
+}
+function fcrToggleCage(id,on){
+  if(!fcrSelectedCages) fcrSelectedCages=new Set();
+  if(on) fcrSelectedCages.add(id); else fcrSelectedCages.delete(id);
+  renderPLFcrTrend($('plFrom')?.value||null,$('plTo')?.value||null);
+}
+function fcrFilterAll(on){
+  fcrSelectedCages=on?new Set(activeCages().map(c=>c.id)):new Set();
+  renderPLFcrTrend($('plFrom')?.value||null,$('plTo')?.value||null);
+}
+function fcrFilterBySpecies(spName){
+  fcrSelectedCages=new Set(activeCages().filter(c=>(c.speciesText||species.find(s=>s.id===c.speciesId)?.name||'その他')===spName).map(c=>c.id));
+  renderPLFcrTrend($('plFrom')?.value||null,$('plTo')?.value||null);
+}
+
 function renderPLFcrTrend(from,to){
   const notice=$('plLazyNotice'); if(notice) notice.style.display='none';
   document.querySelectorAll('.pl-pane').forEach(el=>el.style.display='none');
   const pane=$('pl-fcrtrend'); if(pane) pane.style.display='';
+
+  // フィルターUIを描画し、色マップを取得
+  const colorMap=renderFcrCageFilter();
+
+  const rows=[];
+  activeCages().forEach(c=>{
+    if(fcrSelectedCages && !fcrSelectedCages.has(c.id)) return;
+    const series=getFCRSeries(c.id,from,to);
+    series.forEach(r=>rows.push({cage:c,...r}));
+  });
+
+  // 異常値除外（FCR < 0.5 または > 10 は計算ミス・測定誤差とみなす）
+  const FCR_MIN=0.5, FCR_MAX=10;
+  const validRows=rows.filter(r=>r.fcr!==null&&Number.isFinite(r.fcr)&&r.fcr>=FCR_MIN&&r.fcr<=FCR_MAX);
+  const allRows=rows.filter(r=>r.fcr!==null&&Number.isFinite(r.fcr)); // 表下のテーブルには除外された行も表示
+
+  const labels=[...new Set(validRows.map(r=>r.date))].sort();
+  if(plFcrChartInst){plFcrChartInst.destroy();plFcrChartInst=null;}
+  const canvas=$('plFcrTrendChart');
+
+  const selectedCages=activeCages().filter(c=>!fcrSelectedCages||fcrSelectedCages.has(c.id));
+  const datasets=selectedCages.map(c=>{
+    const s=validRows.filter(r=>r.cage.id===c.id);
+    if(!s.length) return null;
+    const color=colorMap?colorMap[c.id]:'#3AB5A0';
+    return {
+      type:'line', label:c.name,
+      data:labels.map(d=>{const r=s.find(x=>x.date===d); return r?Number(r.fcr.toFixed(2)):null;}),
+      borderColor:color, backgroundColor:color, pointBackgroundColor:color,
+      pointRadius:5, pointHoverRadius:7,
+      tension:.25, spanGaps:false
+    };
+  }).filter(Boolean);
+
+  if(canvas && datasets.length){
+    // Y軸の上限を有効データの最大値+余裕で設定（異常値に引きずられない）
+    const allFcr=validRows.map(r=>r.fcr).filter(Number.isFinite);
+    const yMax=allFcr.length ? Math.ceil(Math.max(...allFcr)*1.15*4)/4 : 10;
+    const yMin=allFcr.length ? Math.max(0, Math.floor(Math.min(...allFcr)*0.9*4)/4) : 0;
+
+    plFcrChartInst=new Chart(canvas.getContext('2d'),{
+      type:'line',
+      data:{labels:labels.map(d=>d.slice(2).replaceAll('-','/')),datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'top',labels:{font:{size:10},boxWidth:10,padding:8}},
+          tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: FCR ${c.parsed.y??'—'}`}}
+        },
+        scales:{
+          y:{min:yMin,max:yMax,
+             title:{display:true,text:'FCR（低いほど良い）',font:{size:11}},
+             ticks:{font:{size:10},callback:v=>v.toFixed(1)}},
+          x:{ticks:{font:{size:10},maxRotation:45,minRotation:0},grid:{display:false}}
+        }
+      }
+    });
+  }
+
+  const table=$('plFcrTrendTable');
+  if(!table) return;
+  const excluded=allRows.length-validRows.length;
+  const sorted=allRows.sort((a,b)=>b.date.localeCompare(a.date)||a.cage.name.localeCompare(b.cage.name)).slice(0,300);
+
+  // テーブル行を先に生成（ネストしたテンプレートリテラル内でブロック本体を使うとパーサーが不安定になるため）
+  const tableRows=sorted.map(r=>{
+    const fcrOk=r.fcr!==null&&Number.isFinite(r.fcr)&&r.fcr>=FCR_MIN&&r.fcr<=FCR_MAX;
+    const fcrVal=r.fcr!==null&&Number.isFinite(r.fcr)?r.fcr.toFixed(2):'—';
+    const fcrStyle=fcrOk?`font-weight:800;color:${fcrColor(r)}`:'color:var(--tx-m)';
+    const fcrCell=fcrOk?fcrVal:`<span title="異常値のためグラフ除外">${fcrVal}</span>`;
+    const gain=r.gain!==null&&Number.isFinite(r.gain)?fmtKgSmart(r.gain,1):'—';
+    return `<tr>
+      <td>${r.date}</td>
+      <td><strong>${r.cage.name}</strong></td>
+      <td>${r.prevDate||'—'}〜${r.date}</td>
+      <td>${fmtKgSmart(r.feed||0,1)}</td>
+      <td>${gain}</td>
+      <td style="${fcrStyle}">${fcrCell}</td>
+    </tr>`;
+  }).join('');
+
+  const excludedNote=excluded>0
+    ?`<div class="alert alert-warn" style="margin-top:10px;font-size:12px">⚠ 異常値（FCR&lt;0.5または&gt;10）が ${excluded} 件検出されグラフから除外しました（表では — 表示）。測量データや給餌記録を確認してください。</div>`
+    :'';
+
+  if(sorted.length){
+    table.innerHTML=`<div class="table-wrap" style="margin-top:14px"><table>
+      <thead><tr><th>測量日</th><th>生簀</th><th>期間</th><th>給餌量</th><th>増重量</th><th>FCR</th></tr></thead>
+      <tbody>${tableRows}</tbody></table></div>${excludedNote}`;
+  }else{
+    table.innerHTML='<div class="empty-state"><p>FCR推移を表示するには、同じ生簀で2回以上の測量記録が必要です。</p></div>';
+  }
+  if(!datasets.length && sorted.length){
+    table.insertAdjacentHTML('afterbegin','<div class="alert alert-warn" style="margin-top:12px">測量記録はありますが、FCR計算に必要な給餌量または増重量が不足しています。</div>');
+  }
+}
   const rows=[];
   activeCages().forEach(c=>{
     const series=getFCRSeries(c.id,from,to);
@@ -3990,25 +4154,6 @@ function renderPLFcrTrend(from,to){
       }
     });
   }
-  const table=$('plFcrTrendTable');
-  if(!table) return;
-  const sorted=rows.sort((a,b)=>b.date.localeCompare(a.date)||a.cage.name.localeCompare(b.cage.name)).slice(0,300);
-  table.innerHTML=sorted.length?`<div class="table-wrap" style="margin-top:14px"><table>
-    <thead><tr><th>測量日</th><th>生簀</th><th>期間</th><th>給餌量</th><th>増重量</th><th>FCR</th></tr></thead>
-    <tbody>${sorted.map(r=>`<tr>
-      <td>${r.date}</td>
-      <td><strong>${r.cage.name}</strong></td>
-      <td>${r.prevDate||'—'}〜${r.date}</td>
-      <td>${fmtKgSmart(r.feed||0,1)}</td>
-      <td>${r.gain!==null&&Number.isFinite(r.gain)?fmtKgSmart(r.gain,1):'—'}</td>
-      <td style="font-weight:800;color:${fcrColor(r)}">${r.fcr!==null&&Number.isFinite(r.fcr)?r.fcr.toFixed(2):'—'}</td>
-    </tr>`).join('')}</tbody></table></div>`:
-    '<div class="empty-state"><p>FCR推移を表示するには、同じ生簀で2回以上の測量記録が必要です。</p></div>';
-  if(!datasets.length && sorted.length){
-    table.insertAdjacentHTML('afterbegin','<div class="alert alert-warn" style="margin-top:12px">測量記録はありますが、FCR計算に必要な給餌量または増重量が不足しています。</div>');
-  }
-}
-
 function renderPLStructure(from,to){
   const cb=getAllCost(from,to);
   if(plPieInst){plPieInst.destroy();plPieInst=null;}
