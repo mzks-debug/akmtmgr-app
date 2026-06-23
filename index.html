@@ -138,6 +138,27 @@ button{cursor:pointer;} a{color:inherit;text-decoration:none;}
 .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--top-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100;box-shadow:var(--sh-xs);}
 .topbar-title{font-size:15px;font-weight:700;color:var(--tx);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
+
+/* 利用者ロール切替ボタン */
+.role-switch{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:999px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--surface);
+  font-size:12.5px;font-weight:700;font-family:inherit;color:var(--tx-s);
+  transition:background .14s,border-color .14s,color .14s;
+  -webkit-tap-highlight-color:transparent;white-space:nowrap;
+}
+.role-switch:hover{background:var(--surface2);}
+.role-switch:active{background:var(--border);}
+.role-switch svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+/* 管理者：Navy / 現場：Gold で色分け */
+.role-switch[data-role="admin"]{color:var(--navy);border-color:var(--navy);}
+.role-switch[data-role="field"]{color:#9a7d1e;border-color:var(--gold,#C9A227);}
+[data-theme="dark"] .role-switch[data-role="admin"]{color:#9cc1e8;border-color:#3a5b80;}
+[data-theme="dark"] .role-switch[data-role="field"]{color:#d9bd5a;border-color:#a8861f;}
+/* スマホ用：トップバー内で少しコンパクトに */
+.role-switch-mob{padding:5px 10px;font-size:12px;}
+.role-switch-mob svg{width:14px;height:14px;}
 #topDate{font-size:12px;color:var(--tx-m);}
 #topActions{display:flex;gap:8px;}
 
@@ -1461,6 +1482,10 @@ input,select,textarea{max-width:100%;min-width:0}
 <div class="topbar">
   <div class="topbar-title" id="topbarTitle">ダッシュボード</div>
   <div class="topbar-right">
+    <button class="role-switch" onclick="toggleUserRole()" title="表示モードを切り替え">
+      <svg viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>
+      <span class="role-switch-label">管理者</span>
+    </button>
     <div id="topActions"></div>
     <div id="topDate"></div>
   </div>
@@ -1473,6 +1498,10 @@ input,select,textarea{max-width:100%;min-width:0}
     <div class="mob-title">赤松<span>水産</span></div>
   </div>
   <div class="mob-actions">
+    <button class="role-switch role-switch-mob" onclick="toggleUserRole()" title="表示モードを切り替え">
+      <svg viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>
+      <span class="role-switch-label">現場</span>
+    </button>
     <button class="mob-record-btn" onclick="openQuickRegisterMenu()" title="登録メニュー">
       <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828z"/></svg>
       <span>＋登録</span>
@@ -2939,6 +2968,47 @@ let transfers = load(KEYS.transfers) || [];
 let grounds   = load(KEYS.grounds)   || defaultGrounds();
 let feedTypes = load(KEYS.feedTypes) || defaultFeedTypes();
 let curPage='dash', curPLTab='summary', curSetTab='history';
+
+/* ─── 利用者ロール（端末ローカル：Firestoreに同期しない） ─────────────
+   field … 現場担当：起動時に「日次記録」へ着地
+   admin … 管理者　：起動時に「損益（経営サマリー）」へ着地
+   未設定なら画面幅で自動判定（768px未満＝field／以上＝admin）。
+   一度切り替えると、その端末では以後その設定を記憶する。 */
+const ROLE_KEY='aq_user_role';
+const ROLE_LANDING={ field:'record', admin:'pl' };
+function detectDefaultRole(){
+  return (window.innerWidth && window.innerWidth < 768) ? 'field' : 'admin';
+}
+function getUserRole(){
+  let r=null;
+  try{ r=localStorage.getItem(ROLE_KEY); }catch(e){}
+  if(r!=='field' && r!=='admin') r=detectDefaultRole();
+  return r;
+}
+function setUserRole(role, opts){
+  if(role!=='field' && role!=='admin') return;
+  try{ localStorage.setItem(ROLE_KEY,role); }catch(e){}
+  updateRoleUI();
+  if(opts && opts.navigate){
+    showPage(ROLE_LANDING[role]||'dash');
+    toast(role==='field'?'現場モードに切り替えました':'管理者モードに切り替えました');
+  }
+}
+function toggleUserRole(){
+  setUserRole(getUserRole()==='field'?'admin':'field', {navigate:true});
+}
+// ロール切替ボタンの表示（ラベル・状態）を現在のロールに合わせて更新
+function updateRoleUI(){
+  const role=getUserRole();
+  document.querySelectorAll('.role-switch').forEach(btn=>{
+    const isField=role==='field';
+    btn.dataset.role=role;
+    const lbl=btn.querySelector('.role-switch-label');
+    if(lbl) lbl.textContent=isField?'現場':'管理者';
+    btn.title=isField?'現場モード（タップで管理者モードへ）':'管理者モード（タップで現場モードへ）';
+  });
+}
+
 // IndexedDBからの読み込み完了後、各状態変数を実値に差し替える
 function reloadStateFromStore(){
   cages     = load(KEYS.cages)     || [];
@@ -4532,36 +4602,6 @@ function renderPLFcrTrend(from,to){
     table.insertAdjacentHTML('afterbegin','<div class="alert alert-warn" style="margin-top:12px">測量記録はありますが、FCR計算に必要な給餌量または増重量が不足しています。</div>');
   }
 }
-  const rows=[];
-  activeCages().forEach(c=>{
-    const series=getFCRSeries(c.id,from,to);
-    series.forEach(r=>rows.push({cage:c,...r}));
-  });
-  const validRows=rows.filter(r=>r.fcr!==null&&Number.isFinite(r.fcr));
-  const labels=[...new Set(validRows.map(r=>r.date))].sort();
-  if(plFcrChartInst){plFcrChartInst.destroy();plFcrChartInst=null;}
-  const canvas=$('plFcrTrendChart');
-  const colors=['#3AB5A0','#2B7BB9','#C9962A','#C0392B','#7E57C2','#607D8B','#009688','#795548','#455A64','#8BC34A','#FF9800','#9C27B0'];
-  const datasets=activeCages().map((c,idx)=>{
-    const s=validRows.filter(r=>r.cage.id===c.id);
-    if(!s.length) return null;
-    return {
-      type:'line', label:c.name,
-      data:labels.map(d=>{const r=s.find(x=>x.date===d); return r?Number(r.fcr.toFixed(2)):null;}),
-      borderColor:colors[idx%colors.length], backgroundColor:colors[idx%colors.length], pointBackgroundColor:colors[idx%colors.length],
-      tension:.25, spanGaps:false
-    };
-  }).filter(Boolean);
-  if(canvas && datasets.length){
-    plFcrChartInst=new Chart(canvas.getContext('2d'),{
-      type:'line',
-      data:{labels:labels.map(d=>d.slice(2).replaceAll('-','/')),datasets},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: FCR ${c.parsed.y??'—'}`}}},
-        scales:{y:{beginAtZero:false,title:{display:true,text:'FCR'},ticks:{font:{size:10}}},x:{ticks:{font:{size:10},maxRotation:45,minRotation:0},grid:{display:false}}}
-      }
-    });
-  }
 function renderPLStructure(from,to){
   const cb=getAllCost(from,to);
   if(plPieInst){plPieInst.destroy();plPieInst=null;}
@@ -5300,7 +5340,8 @@ async function bootLocalState(){
   if(settings.theme==='dark') document.documentElement.setAttribute('data-theme','dark');
   const dateEl=$('topDate');
   if(dateEl) dateEl.textContent=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-  showPage('dash');
+  updateRoleUI();
+  showPage(ROLE_LANDING[getUserRole()]||'dash');
   checkStorageQuota();
 }
 // Firebaseの準備が整うまで待つ（モジュールスクリプトの読み込み完了を待機）
